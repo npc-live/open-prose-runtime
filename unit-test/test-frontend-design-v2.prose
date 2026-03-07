@@ -1,0 +1,223 @@
+# Frontend Design Test - Prose.md Style Website
+# Version 2: Using built-in tools (no external skill import needed)
+
+# Define a design agent
+agent web_designer:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: """You are an expert frontend designer specializing in minimal, clean websites.
+You create production-ready HTML with inline CSS following modern design principles.
+You're inspired by beautiful sites like prose.md with their simple elegance."""
+
+# Step 1: Create the website
+let website_html = session: web_designer
+  prompt: """
+Design a complete, beautiful landing page HTML with inline CSS.
+
+MANDATORY STRUCTURE:
+━━━━━━━━━━━━━━━━━━━━━━━
+<head>
+  - Meta tags (viewport, charset)
+  - Title: "Prose.md Style - Minimal Design"
+  - Inline CSS
+</head>
+
+<header>
+  - Logo (text-based: "OpenProse" or similar)
+  - Nav menu with 4 links: Home, Features, Docs, GitHub
+</header>
+
+<main>
+  - Hero section with heading and description
+  - 2-3 feature cards
+</main>
+
+<footer>
+  - Copyright notice
+  - Social links
+  - Privacy & Terms links
+</footer>
+
+DESIGN REQUIREMENTS (Prose.md Style):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Color Palette:
+   - Background: #ffffff (white) or #fafbfc (very light gray)
+   - Text: #24292f (dark gray) or #1f2937
+   - Accent: #8b5cf6 (purple) OR #6366f1 (indigo) - choose one
+   - Subtle borders: #e5e7eb
+   - Cards/hover: #f9fafb
+
+2. Typography:
+   - Font: system-ui, -apple-system, sans-serif
+   - Heading: 2.5rem, bold, tight line-height
+   - Body: 1rem, line-height 1.6
+   - Proper hierarchy (h1, h2, p)
+
+3. Spacing & Layout:
+   - Max width: 1200px, centered
+   - Generous padding: 80px top/bottom sections
+   - White space between elements
+   - Container: padding 0 24px
+
+4. Components:
+   - Logo: Simple text, 1.5rem, bold
+   - Nav: Horizontal, subtle hover underline
+   - Cards: White bg, subtle shadow, rounded corners (8px)
+   - Footer: Smaller text, subtle color
+
+5. Effects:
+   - Smooth transitions (0.2s ease)
+   - Hover states on links and buttons
+   - Subtle box-shadow on cards: 0 1px 3px rgba(0,0,0,0.1)
+   - Rounded corners: border-radius 8px
+
+MAKE IT PRODUCTION-READY:
+- Clean, semantic HTML5
+- Mobile responsive (media queries)
+- Accessible (proper alt text, ARIA labels)
+- Beautiful and professional
+
+Generate the complete HTML now.
+"""
+
+# Step 2: Validate all requirements
+agent validator:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You are a strict QA validator who checks every requirement."
+
+let validation = session: validator
+  prompt: """
+Thoroughly check this HTML against ALL requirements:
+
+{website_html}
+
+CHECKLIST (must find in code):
+━━━━━━━━━━━━━━━━━━━━━━━
+
+1. STRUCTURE REQUIREMENTS:
+   [ ] <head> with meta viewport and charset
+   [ ] <head> has <title> tag
+   [ ] <head> has <style> with CSS
+   [ ] <header> exists
+   [ ] Logo/brand name in header
+   [ ] <nav> element in header
+   [ ] Nav has 4+ links (Home, Features, Docs, GitHub)
+   [ ] <main> element exists
+   [ ] <footer> element exists
+   [ ] Footer has copyright
+   [ ] Footer has links
+
+2. STYLE REQUIREMENTS:
+   [ ] Background color is white/light (#ffffff or #fafbfc)
+   [ ] Text color is dark gray (#24292f or similar)
+   [ ] Has ONE accent color (purple/indigo)
+   [ ] Uses system fonts (system-ui, sans-serif)
+   [ ] Cards/sections have border-radius
+   [ ] Elements have box-shadow
+   [ ] Responsive design (media queries)
+   [ ] Smooth transitions on hover
+
+3. PROSE.MD STYLE:
+   [ ] Minimal and clean aesthetic
+   [ ] Generous white space
+   [ ] Simple color palette (3 colors max)
+   [ ] Professional and modern look
+
+Check EACH item above. For each:
+✅ FOUND - [quote exact code snippet]
+❌ MISSING - [explain what's wrong]
+
+Then calculate:
+━━━━━━━━━━━━━━━
+FINAL SCORE: X/23 (XX%)
+STATUS: [PASS ✅ / FAIL ❌]
+━━━━━━━━━━━━━━━
+
+A passing score is 20/23 or higher (87%).
+"""
+  context: [website_html]
+
+# Step 3: Check specific elements with string operations
+agent element_checker:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You verify HTML elements exist."
+
+let has_head = session: element_checker
+  prompt: "Check if this HTML contains '<head>' tag. Answer: YES or NO only."
+  context: [website_html]
+
+let has_nav = session: element_checker
+  prompt: "Check if this HTML contains '<nav>' tag. Answer: YES or NO only."
+  context: [website_html]
+
+let has_footer = session: element_checker
+  prompt: "Check if this HTML contains '<footer>' tag. Answer: YES or NO only."
+  context: [website_html]
+
+let has_logo = session: element_checker
+  prompt: "Check if this HTML has a logo or brand name in the header. Answer: YES or NO only."
+  context: [website_html]
+
+# Step 4: Color scheme validation
+let color_check = session: validator
+  prompt: """
+Analyze the color scheme in this CSS:
+
+{website_html}
+
+Check:
+1. Is background light (white or near-white)?
+2. Is text dark (black or dark gray)?
+3. Is there exactly ONE accent color (purple, blue, or indigo)?
+4. Is the palette simple (3 main colors max)?
+
+Answer format:
+Background: [color] - ✅ Light / ❌ Dark
+Text: [color] - ✅ Dark / ❌ Light
+Accent: [color] - ✅ Single / ❌ Multiple
+Simplicity: ✅ Simple (≤3 colors) / ❌ Complex (>3 colors)
+
+Overall: ✅ PASS / ❌ FAIL
+"""
+  context: [website_html]
+
+# Step 5: Final report
+let final_report = session: validator
+  prompt: """
+Generate a final test report:
+
+ELEMENT CHECKS:
+- <head>: {has_head}
+- <nav>: {has_nav}
+- <footer>: {has_footer}
+- Logo: {has_logo}
+
+COLOR SCHEME:
+{color_check}
+
+FULL VALIDATION:
+{validation}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINAL TEST REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Overall Status: [✅ PASS / ❌ FAIL]
+
+Summary:
+- All required elements present: [YES/NO]
+- Prose.md style achieved: [YES/NO]
+- Simple color palette: [YES/NO]
+- Production ready: [YES/NO]
+
+Score: [X/23] ([XX%])
+
+Next Steps:
+[If failed, list what needs to be fixed]
+[If passed, suggest optional improvements]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+  context: [has_head, has_nav, has_footer, has_logo, color_check, validation]

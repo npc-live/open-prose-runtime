@@ -1,0 +1,37 @@
+# Test Named Blocks
+
+agent test:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test 1: Define a simple block
+block greet:
+  let msg = session: test
+    prompt: "Use bash to run: echo 'Hello from block'"
+
+# Test 2: Invoke the block
+do greet
+
+# Test 3: Define a block with parameters
+block greet_person(name):
+  let greeting = session: test
+    prompt: "Use bash to run: echo 'Hello {name}!'"
+
+# Test 4: Invoke with arguments
+do greet_person("Alice")
+do greet_person("Bob")
+
+# Test 5: Block with multiple parameters
+block add_numbers(x, y):
+  let result = session: test
+    prompt: "Use bash to run: echo 'Sum: {x} + {y}'"
+
+# Test 6: Invoke with number arguments
+do add_numbers(10, 20)
+do add_numbers(5, 15)
+
+# Test 7: Anonymous do block
+do:
+  let anon_msg = session: test
+    prompt: "Use bash to run: echo 'Anonymous block executed'"

@@ -1,0 +1,44 @@
+# Complete test of block return values
+
+agent tester:
+  model: sonnet
+  prompt: "You are a helpful test agent"
+
+# Test 1: Block with parameters
+block greet(name):
+  return "Hello, {name}!"
+
+let greeting1 = do greet("Alice")
+let greeting2 = do greet("Bob")
+
+session: tester
+  prompt: "Confirm: {greeting1} and {greeting2}"
+
+# Test 2: Block with conditional return
+block check_value(val):
+  if **{val} is "test"**:
+    return "found test"
+  else:
+    return "not test"
+
+let result = do check_value("test")
+
+session: tester
+  prompt: "Result is: {result}"
+
+# Test 3: Anonymous block with return
+let computed = do:
+  let temp = "computed value"
+  return temp
+
+session: tester
+  prompt: "Computed: {computed}"
+
+# Test 4: Block without explicit return
+block no_return():
+  let x = "internal value"
+
+let nothing = do no_return()
+
+session: tester
+  prompt: "Should be null: {nothing}"

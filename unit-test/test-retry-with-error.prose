@@ -1,0 +1,22 @@
+# Test Retry with Actual Errors
+
+agent tester:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test: Command that fails initially (non-existent command)
+try:
+  let fail_result = session: tester
+    prompt: "Use bash to run: nonexistentcommand123"
+    retry: 3
+    backoff: "exponential"
+catch as err:
+  let error_msg = session: tester
+    prompt: "Use bash to run: echo 'Caught error after 3 retries'"
+
+# Test: Successful command with retry (should succeed on first try)
+let success_result = session: tester
+  prompt: "Use bash to run: echo 'Success without retry needed'"
+  retry: 3
+  backoff: "linear"

@@ -1,0 +1,13 @@
+# Test Tool Calling (Built-in Tools)
+
+# Test 1: Math calculation
+session "Calculate the value of 15 * 8 + 42. Use the calculate tool if available, otherwise compute it yourself"
+
+# Test 2: Get current time
+session "What is the current date and time? Use the get_current_time tool if available"
+
+# Test 3: Random number
+session "Generate a random number between 1 and 100. Use the random_number tool if available"
+
+# Test 4: String operations
+session "Convert the text 'hello world' to uppercase. Use the string_operations tool if available"

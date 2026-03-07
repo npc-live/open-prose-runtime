@@ -1,0 +1,162 @@
+# Frontend Design Test - Prose.md Style Website
+# Final Version: Import frontend_design skill and validate
+
+# Import the frontend-design skill from local file
+import "frontend_design" from "./skills/frontend-design.json"
+
+# Designer agent with the imported skill
+agent web_designer:
+  model: sonnet
+  skills: ["frontend_design", "string_operations"]
+  prompt: "You are an expert frontend designer who creates minimal, clean websites inspired by prose.md"
+
+# Step 1: Generate the website using frontend_design tool
+let website = session: web_designer
+  prompt: """
+Use the frontend_design tool to create a landing page website.
+
+Call the tool with these parameters:
+- style: "prose-style"
+- requirements: "Minimal design like prose.md with light background, dark text, purple accent"
+- elements: ["head", "logo", "nav", "footer"]
+
+Then enhance the generated HTML if needed to ensure:
+1. Has proper <head> section
+2. Has a visible logo
+3. Has <nav> with 4 links
+4. Has <footer> with copyright
+5. Uses simple color palette (white bg, dark text, one accent color)
+6. Looks like prose.md (minimal, clean, modern)
+"""
+
+# Step 2: Validate required elements
+agent validator:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You are a meticulous validator who checks HTML requirements"
+
+# Check for <head>
+let check_head = session: validator
+  prompt: """
+Check if this HTML has a proper <head> section with meta tags and title.
+
+HTML:
+{website}
+
+Answer: YES or NO
+If YES, quote the <head> tag line.
+"""
+  context: [website]
+
+# Check for logo
+let check_logo = session: validator
+  prompt: """
+Check if this HTML has a logo in the header (can be text-based like "OpenProse" or an image).
+
+HTML:
+{website}
+
+Answer: YES or NO
+If YES, describe where the logo is and what it says.
+"""
+  context: [website]
+
+# Check for <nav>
+let check_nav = session: validator
+  prompt: """
+Check if this HTML has a <nav> element with navigation links.
+
+HTML:
+{website}
+
+Answer: YES or NO
+If YES, list the navigation links found.
+"""
+  context: [website]
+
+# Check for <footer>
+let check_footer = session: validator
+  prompt: """
+Check if this HTML has a <footer> element at the bottom.
+
+HTML:
+{website}
+
+Answer: YES or NO
+If YES, describe what's in the footer.
+"""
+  context: [website]
+
+# Step 3: Check color scheme
+let check_colors = session: validator
+  prompt: """
+Analyze the CSS color scheme in this HTML:
+
+{website}
+
+Check if it matches prose.md style:
+1. Background: Is it light (white or near-white)? What color?
+2. Text: Is it dark? What color?
+3. Accent: Is there ONE accent color (purple/blue)? What color?
+4. Simple palette: Does it use 3 colors or less?
+
+Answer each question, then say:
+COLOR SCHEME: ✅ PASS (simple, prose-style) or ❌ FAIL (too complex/wrong colors)
+"""
+  context: [website]
+
+# Step 4: Overall validation
+let final_validation = session: validator
+  prompt: """
+Based on all checks, generate the final validation report:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FRONTEND DESIGN TEST REPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+REQUIRED ELEMENTS:
+1. <head> section: {check_head}
+2. Logo in header: {check_logo}
+3. <nav> element: {check_nav}
+4. <footer> element: {check_footer}
+
+COLOR SCHEME:
+{check_colors}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+OVERALL RESULT:
+[ ] All 4 required elements present
+[ ] Color scheme is simple (like prose.md)
+[ ] Design is minimal and clean
+
+STATUS: ✅ PASSED / ❌ FAILED
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If PASSED: "Website meets all requirements! 🎉"
+If FAILED: "Missing: [list what failed]"
+"""
+  context: [check_head, check_logo, check_nav, check_footer, check_colors]
+
+# Step 5: Generate summary
+let summary = session: validator
+  prompt: """
+Create a concise summary:
+
+{final_validation}
+
+Format:
+━━━━━━━━━━━━━━━
+TEST SUMMARY
+━━━━━━━━━━━━━━━
+✅ / ❌  <head> section
+✅ / ❌  Logo
+✅ / ❌  <nav> links
+✅ / ❌  <footer>
+✅ / ❌  Simple colors (prose.md style)
+
+RESULT: PASS ✅ or FAIL ❌
+━━━━━━━━━━━━━━━
+"""
+  context: [final_validation]

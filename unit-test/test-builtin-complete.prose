@@ -1,0 +1,46 @@
+# Complete Test for Built-in Tools
+
+agent admin:
+  model: sonnet
+  skills: ["read", "write", "bash", "edit"]
+  prompt: "You are a system administrator with file and shell access"
+
+# ========== Test 1: Write Tool ==========
+let test1_write = session: admin
+  prompt: "Use write tool: Create './demo.txt' with 'Line 1\\nLine 2\\nLine 3'"
+
+# ========== Test 2: Read Tool ==========
+let test2_read = session: admin
+  prompt: "Use read tool: Read content from './demo.txt'"
+
+# ========== Test 3: Edit Tool - Append ==========
+let test3_append = session: admin
+  prompt: "Use edit tool with operation='append' to add '\\nLine 4' to './demo.txt'"
+
+# ========== Test 4: Edit Tool - Replace ==========
+let test4_replace = session: admin
+  prompt: "Use edit tool with operation='replace' to replace 'Line 2' with 'Modified Line 2' in './demo.txt'"
+
+# ========== Test 5: Read After Edit ==========
+let test5_verify = session: admin
+  prompt: "Use read tool to read './demo.txt' and verify the changes"
+
+# ========== Test 6: Bash Tool - Multiple Commands ==========
+let test6_bash_info = session: admin
+  prompt: "Use bash tool to run: echo 'OpenProse Version 2.0' && node --version && npx --version"
+
+# ========== Test 7: Bash Tool - File Operations ==========
+let test7_bash_files = session: admin
+  prompt: "Use bash tool to run: ls -lh demo.txt"
+
+# ========== Test 8: Write with Append Flag ==========
+let test8_write_append = session: admin
+  prompt: "Use write tool with append=true to add '\\n--- Footer ---' to './demo.txt'"
+
+# ========== Test 9: Final Read ==========
+let test9_final = session: admin
+  prompt: "Use read tool to show final content of './demo.txt'"
+
+# ========== Test 10: Cleanup ==========
+let test10_cleanup = session: admin
+  prompt: "Use bash tool to run: rm demo.txt && echo 'Cleanup complete'"

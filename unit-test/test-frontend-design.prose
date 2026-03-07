@@ -1,0 +1,124 @@
+# Frontend Design Test - Prose.md Style Website
+
+# Import frontend-design skill from skills.sh
+# Note: Adjust the import source based on actual skills.sh format
+import "frontend_design" from "https://skills.sh/frontend-design"
+
+# Define a design agent with frontend skills
+agent web_designer:
+  model: sonnet
+  skills: ["frontend_design", "string_operations"]
+  prompt: "You are an expert frontend designer who creates clean, minimal websites with excellent UX. You follow design best practices and create semantic HTML with modern CSS."
+
+# Step 1: Design the website structure
+let website_design = session: web_designer
+  prompt: """
+Create a complete HTML page with inline CSS that meets these requirements:
+
+MANDATORY ELEMENTS:
+1. <head> section with proper meta tags and title
+2. Logo in the header (can be text-based)
+3. Navigation menu (nav element with at least 3-4 links)
+4. Main content area
+5. Footer with copyright and links
+
+DESIGN STYLE (inspired by https://prose.md/):
+- Minimal and clean design
+- Simple color palette: mostly white/light gray background with dark text
+- Use of subtle accent color (like prose.md uses purple/blue)
+- Plenty of white space
+- Modern sans-serif font (like Inter, SF Pro, or system fonts)
+- Smooth rounded corners on cards/buttons
+- Subtle shadows for depth
+- Responsive layout
+
+SPECIFIC REQUIREMENTS:
+- Logo: Simple text logo or minimal icon in top-left
+- Nav: Horizontal navigation bar in header
+- Color scheme:
+  * Background: #ffffff or #fafafa
+  * Text: #1a1a1a or #2d3748
+  * Accent: One soft color like #8b5cf6 (purple) or #3b82f6 (blue)
+  * Links: Subtle underline on hover
+- Typography: Clean hierarchy with proper spacing
+- Footer: Subtle, minimal footer at bottom
+
+Generate the complete HTML with inline CSS. Make it production-ready and beautiful.
+"""
+
+# Step 2: Validate the design requirements
+agent validator:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You are a meticulous QA engineer who validates web designs against requirements."
+
+let validation_result = session: validator
+  prompt: """
+Analyze this HTML code and check if it meets ALL requirements:
+
+HTML CODE:
+{website_design}
+
+REQUIREMENTS TO CHECK:
+1. ✓ Has <head> section with proper structure
+2. ✓ Has a logo (text or image) in header
+3. ✓ Has <nav> element with navigation links
+4. ✓ Has <footer> element at the bottom
+5. ✓ Uses simple color palette (light background, dark text, one accent color)
+6. ✓ Similar minimal style to prose.md (clean, modern, lots of white space)
+7. ✓ Proper semantic HTML structure
+8. ✓ Responsive and mobile-friendly
+
+For each requirement, respond with:
+- ✅ PASS: [explanation]
+- ❌ FAIL: [what's missing]
+
+Then provide an overall summary:
+TOTAL SCORE: X/8 requirements met
+
+If any requirement fails, explain exactly what needs to be fixed.
+"""
+  context: [website_design]
+
+# Step 3: Extract validation summary
+let validation_summary = session: validator
+  prompt: """
+Based on this validation result, provide a concise summary:
+
+{validation_result}
+
+Format:
+Status: [PASSED ✅ / FAILED ❌]
+Score: X/8
+Issues: [list any failures or improvements needed]
+"""
+  context: [validation_result]
+
+# Step 4: If needed, refine the design
+agent design_fixer:
+  model: sonnet
+  skills: ["frontend_design", "string_operations"]
+  prompt: "You are a design fixer who improves websites based on feedback."
+
+let final_design = session: design_fixer
+  prompt: """
+Review this website design and the validation feedback.
+
+ORIGINAL DESIGN:
+{website_design}
+
+VALIDATION FEEDBACK:
+{validation_result}
+
+If there are any failures or issues:
+1. Fix all the problems mentioned
+2. Ensure ALL 8 requirements are met
+3. Keep the clean, minimal prose.md style
+
+If everything passed:
+1. Make minor improvements to polish the design
+2. Ensure it's production-ready
+
+Return the final, perfected HTML code.
+"""
+  context: [website_design, validation_result]

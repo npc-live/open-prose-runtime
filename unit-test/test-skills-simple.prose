@@ -1,0 +1,11 @@
+# Simple Skills Test
+# Test using skills without imports (just built-in tools)
+
+agent researcher:
+  model: sonnet
+  prompt: "You are a research assistant"
+  tools: ["bash", "read"]
+
+# Test using the agent with tools
+session: researcher
+  prompt: "List the files in the unit-test directory and tell me how many test files there are"

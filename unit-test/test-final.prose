@@ -1,0 +1,10 @@
+# Final Integration Test
+
+# Test 1: Simple greeting
+let hello = session "Say 'Hello from OpenProse!' in a friendly way"
+
+# Test 2: Calculation
+let result = session "Calculate 123 + 456. Reply with just the number"
+
+# Test 3: Short explanation
+let explain = session "In exactly one sentence, what is machine learning?"

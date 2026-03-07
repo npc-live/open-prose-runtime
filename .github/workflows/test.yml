@@ -1,0 +1,52 @@
+name: Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: plugin
+        run: bun install
+
+      - name: Run linter
+        working-directory: plugin
+        run: bun run lint
+
+      - name: Run tests
+        working-directory: plugin
+        run: bun test
+
+      - name: Build
+        working-directory: plugin
+        run: bun run build
+
+      - name: Test CLI
+        working-directory: plugin
+        run: |
+          bun run bin/open-prose.ts --version
+          bun run bin/open-prose.ts validate examples/01-hello-world.prose

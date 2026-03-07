@@ -1,0 +1,19 @@
+{
+  "name": "npx_skills_add",
+  "description": "Install skills from GitHub repositories using 'npx skills add <owner/repo>' command. This downloads and configures external skills.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "repo": {
+        "type": "string",
+        "description": "GitHub repository in format 'owner/repo'"
+      },
+      "skill_name": {
+        "type": "string",
+        "description": "Name of the skill to extract from the repo (optional)"
+      }
+    },
+    "required": ["repo"]
+  },
+  "handler": "async (args) => { const { repo, skill_name } = args; const cp = await import('child_process'); const execSync = cp.execSync; try { const command = `npx skills add ${repo}`; console.log(`[npx-skills] Running: ${command}`); const output = execSync(command, { encoding: 'utf-8', maxBuffer: 10 * 1024 * 1024, timeout: 60000 }); return { success: true, repo, skill_name, output: output.trim(), message: `Successfully added skill from ${repo}` }; } catch (error) { return { success: false, repo, error: error.message, stderr: error.stderr ? error.stderr.toString() : '' }; } }"
+}

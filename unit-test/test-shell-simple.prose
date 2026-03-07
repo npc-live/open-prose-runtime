@@ -1,0 +1,20 @@
+# Simple Shell Test
+
+import "shell_exec" from "./skills/shell-exec.json"
+
+agent admin:
+  model: sonnet
+  skills: ["shell_exec"]
+  prompt: "You execute shell commands"
+
+# Test 1: Check Node version
+let node_version = session: admin
+  prompt: "Use shell_exec tool to run command: node --version"
+
+# Test 2: Check if npx is available
+let npx_check = session: admin
+  prompt: "Use shell_exec tool to run command: npx --version"
+
+# Test 3: List current directory
+let list_files = session: admin
+  prompt: "Use shell_exec tool to run command: ls -la | head -20"

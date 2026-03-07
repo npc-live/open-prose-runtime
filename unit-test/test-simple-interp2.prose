@@ -1,0 +1,6 @@
+agent test:
+  model: sonnet
+
+let x = 5
+let msg = session: test
+  prompt: "Hello {x}"

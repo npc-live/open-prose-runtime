@@ -1,0 +1,241 @@
+# Skill Optimization Loop
+# 自动测试和优化 skill 的闭环系统
+# 流程：读取图片 → 描述 → 生成页面 → 评估 → 归因问题 → 改进
+
+# 导入相关 skills
+import "frontend-design" from "github:anthropics/skills"
+import "web-artifacts-builder" from "github:anthropics/skills"
+import "brand-guidelines" from "github:anthropics/skills"
+
+# ==================== 阶段 1: 图片分析和描述 ====================
+
+agent image_analyzer:
+  model: sonnet
+  prompt: "You are an expert in visual design analysis"
+  tools: ["read", "bash"]
+
+let image_path = "/Users/qing/projects/open-prose/test-image.png"
+
+let image_description = session: image_analyzer
+  prompt: """
+  Please analyze the image at: {image_path}
+
+  Provide a detailed description including:
+  1. **Color Scheme**: Primary colors, secondary colors, accent colors (use hex codes)
+  2. **Layout Style**: Grid-based, flexbox, centered, asymmetric, etc.
+  3. **Typography**: Font families, sizes, weights (heading, body, small text)
+  4. **Visual Elements**: Buttons, cards, navigation, headers, footers
+  5. **Mood/Tone**: Modern, minimalist, vibrant, professional, playful, etc.
+  6. **Spacing**: Padding, margins, gaps between elements
+
+  Format your response as a structured design specification.
+  """
+
+# ==================== 阶段 2: 生成 HTML/CSS 页面 ====================
+
+agent web_developer:
+  model: sonnet
+  prompt: "You are an expert frontend developer specializing in clean HTML and CSS"
+  skills: ["frontend-design", "web-artifacts-builder"]
+  tools: ["write", "read", "edit"]
+
+let webpage = session: web_developer
+  prompt: """
+  Based on the following design specification, create a complete HTML page with inline CSS:
+
+  {image_description}
+
+  Requirements:
+  - Pure HTML5 and CSS3 (no JavaScript)
+  - Inline CSS in <style> tag
+  - Responsive design
+  - Clean, semantic HTML
+  - Follow the color scheme, typography, and layout from the specification
+  - Create a complete, functional webpage
+
+  Save the HTML to: /Users/qing/projects/open-prose/generated-page.html
+
+  IMPORTANT: Use the WRITE tool to create the file.
+  """
+  context: image_description
+
+# ==================== 阶段 3: 评估和对比 ====================
+
+agent qa_evaluator:
+  model: opus
+  prompt: "You are a meticulous QA engineer and design critic"
+  skills: ["brand-guidelines"]
+  tools: ["read", "bash"]
+
+let evaluation = session: qa_evaluator
+  prompt: """
+  Evaluate the generated webpage against the original specification.
+
+  Original Specification:
+  {image_description}
+
+  Generated Webpage Path: /Users/qing/projects/open-prose/generated-page.html
+
+  Please:
+  1. Read the generated HTML file
+  2. Compare it against the specification
+  3. Open it in a browser to visually inspect (use bash: open generated-page.html)
+  4. Identify discrepancies:
+     - Missing colors
+     - Wrong typography
+     - Layout issues
+     - Missing elements
+
+  Provide a detailed evaluation report.
+  """
+  context: { image_description, webpage }
+
+# ==================== 阶段 4: 问题归因分析 ====================
+
+agent root_cause_analyst:
+  model: opus
+  prompt: "You are a technical analyst specializing in AI workflow optimization"
+  tools: ["read"]
+
+let root_cause = session: root_cause_analyst
+  prompt: """
+  Analyze why the generated webpage doesn't match the specification.
+
+  Evaluation Report:
+  {evaluation}
+
+  Categorize issues into:
+
+  **A. Skill Deficiency**
+  - The skill lacks specific knowledge/guidance
+  - Example: Missing CSS Grid patterns, color palette guidance, etc.
+
+  **B. Prompt Insufficiency**
+  - The initial prompt was too vague
+  - Missing specific requirements
+  - Example: Didn't specify exact color codes, font sizes, etc.
+
+  **C. Context Loss**
+  - Information lost between stages
+  - Agent didn't use available context properly
+
+  **D. Tool Usage Issues**
+  - Agent didn't use tools effectively
+  - File wasn't created/read properly
+
+  For each identified issue, provide:
+  1. **Category**: A, B, C, or D
+  2. **Severity**: Critical, High, Medium, Low
+  3. **Root Cause**: Detailed explanation
+  4. **Recommendation**: Specific fix
+  """
+  context: { image_description, webpage, evaluation }
+
+# ==================== 阶段 5: 生成改进建议 ====================
+
+agent improvement_generator:
+  model: opus
+  prompt: "You are a continuous improvement specialist"
+  tools: ["write", "read"]
+
+let improvements = session: improvement_generator
+  prompt: """
+  Based on the root cause analysis, generate specific improvements.
+
+  Root Cause Analysis:
+  {root_cause}
+
+  For each issue, generate:
+
+  **If Skill Deficiency (Category A):**
+  - Write a new skill markdown file with the missing knowledge
+  - Format: SKILL.md with proper frontmatter
+  - Save to: /Users/qing/projects/open-prose/skills/improved-[skill-name].md
+
+  **If Prompt Insufficiency (Category B):**
+  - Rewrite the prompt with more specificity
+  - Include exact values, measurements, and requirements
+  - Save to: /Users/qing/projects/open-prose/improved-prompt.txt
+
+  **If Context Loss (Category C):**
+  - Suggest context passing improvements
+  - Recommend which data should be explicitly passed
+
+  **If Tool Usage Issues (Category D):**
+  - Provide corrected tool usage examples
+  - Add error handling suggestions
+
+  Generate all improvement artifacts now.
+  """
+  context: { image_description, webpage, evaluation, root_cause }
+
+# ==================== 阶段 6: 重新生成（改进版本）====================
+
+agent web_developer_v2:
+  model: sonnet
+  prompt: "You are an expert frontend developer (v2 - improved)"
+  skills: ["frontend-design", "web-artifacts-builder"]
+  tools: ["write", "read", "edit"]
+
+let improved_webpage = session: web_developer_v2
+  prompt: """
+  Create an IMPROVED version of the webpage based on:
+
+  Original Specification:
+  {image_description}
+
+  Previous Issues:
+  {evaluation}
+
+  Improvement Recommendations:
+  {improvements}
+
+  Generate a complete HTML page with inline CSS that addresses ALL identified issues.
+  Save to: /Users/qing/projects/open-prose/generated-page-v2.html
+
+  CRITICAL: Follow the improvement recommendations precisely.
+  """
+  context: { image_description, evaluation, improvements }
+
+# ==================== 阶段 7: 最终验证 ====================
+
+agent final_validator:
+  model: opus
+  prompt: "You are the final quality gate"
+  tools: ["read", "bash"]
+
+session: final_validator
+  prompt: """
+  Perform final validation of the improved webpage.
+
+  Compare:
+  - Original: /Users/qing/projects/open-prose/generated-page.html
+  - Improved: /Users/qing/projects/open-prose/generated-page-v2.html
+
+  Specification:
+  {image_description}
+
+  Provide:
+  1. Side-by-side comparison
+  2. Improvement metrics (how many issues were fixed)
+  3. Remaining issues (if any)
+  4. Success rate (%)
+  5. Lessons learned for future iterations
+
+  Open both files in browser for visual comparison:
+  - open generated-page.html
+  - open generated-page-v2.html
+  """
+  context: { image_description, evaluation, improvements, improved_webpage }
+
+# ==================== 总结报告 ====================
+
+session "Generate a comprehensive summary report of the entire optimization loop"
+  context: {
+    image_description,
+    webpage,
+    evaluation,
+    root_cause,
+    improvements,
+    improved_webpage
+  }

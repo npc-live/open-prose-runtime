@@ -1,0 +1,28 @@
+# Simple Advanced Control Flow Test
+
+agent echo:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test 1: Loop with max iterations
+loop (max: 2) as i:
+  let msg = session: echo
+    prompt: "Use bash to run: echo 'Loop {i}'"
+
+# Test 2: Try/catch (no error)
+try:
+  let safe = session: echo
+    prompt: "Use bash to run: echo 'No error'"
+catch:
+  let error = session: echo
+    prompt: "Use bash to run: echo 'Error caught'"
+
+# Test 3: Parallel (3 tasks)
+parallel:
+  let a = session: echo
+    prompt: "Use bash to run: echo 'Task A'"
+  let b = session: echo
+    prompt: "Use bash to run: echo 'Task B'"
+  let c = session: echo
+    prompt: "Use bash to run: echo 'Task C'"

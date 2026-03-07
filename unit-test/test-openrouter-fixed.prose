@@ -1,0 +1,21 @@
+# Test OpenRouter Integration (Fixed)
+
+# Simple greeting
+let greeting = session "Say hello and introduce yourself in one sentence"
+
+# Research with proper string interpolation
+let topic = "AI agent orchestration"
+session "Tell me what {topic} is in 2-3 sentences"
+
+# Let's make a proper flow
+let research = session "Explain OpenProse, a DSL for orchestrating AI agent sessions, in 2-3 sentences"
+
+# Summarize with context
+let summary = session "Based on the research, give me 3 key points in a bullet list"
+  context: research
+
+# Math calculation
+let x = 5
+let y = 10
+let calculation = session "What is the sum? Just give me the number"
+  context: { x, y }

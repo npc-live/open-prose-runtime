@@ -1,0 +1,31 @@
+# Simple Control Flow Test
+
+agent echo:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test 1: Repeat
+repeat 3 as i:
+  let msg = session: echo
+    prompt: "Use bash to run: echo 'Repeat {i}'"
+
+# Test 2: For-each
+const fruits = ["apple", "banana", "cherry"]
+
+for fruit in fruits:
+  let output = session: echo
+    prompt: "Use bash to run: echo 'Fruit: {fruit}'"
+
+# Test 3: If (true condition)
+if **2 plus 2 equals 4**:
+  let truth = session: echo
+    prompt: "Use bash to run: echo 'Math works!'"
+
+# Test 4: If/else (false condition)
+if **the moon is made of cheese**:
+  let nonsense = session: echo
+    prompt: "Use bash to run: echo 'This should not print'"
+else:
+  let reality = session: echo
+    prompt: "Use bash to run: echo 'Else branch works!'"

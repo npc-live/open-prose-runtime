@@ -2,7 +2,7 @@
 # Draft content, then iteratively improve it
 
 # Create initial draft
-session "Write a first draft of a README.md for this project. Include sections for: overview, installation, usage, and contributing."
+session "IMPORTANT: You are creating a brand new README.md file from scratch. There is currently NO README.md in the root directory. Read existing documentation (docs/README.md, docs/QUICKSTART.md) for reference, then use the WRITE tool to create a complete README.md in the current directory with sections for: overview, installation, usage, and contributing."
 
 # Self-review and improve
 session "Review the README draft you just wrote. Identify areas that are unclear, too verbose, or missing important details."

@@ -1,0 +1,22 @@
+# Simple Arrow Chain Test
+
+agent tester:
+  model: sonnet
+  prompt: "You are a helpful tester"
+
+# Test: Two-step arrow chain
+let step1 = session: tester "Generate the word: HELLO"
+let step2 = session: tester "Transform {step1} to lowercase"
+
+session: tester
+  prompt: "Step 1: {step1}"
+
+session: tester
+  prompt: "Step 2: {step2}"
+
+# Now test with arrow
+let chained = session: tester "Generate the word: WORLD"
+  -> session: tester "Add exclamation to: {result}"
+
+session: tester
+  prompt: "Chained result: {chained}"

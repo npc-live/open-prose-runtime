@@ -2,26 +2,30 @@
 # This demonstrates importing external skills and assigning them to agents.
 
 # Import skills from external sources
-import "web-search" from "github:anthropic/skills"
-import "summarizer" from "npm:@example/summarizer"
-import "file-reader" from "./local-skills/file-reader"
+# Anthropic Skills use markdown-based skill definitions (SKILL.md)
+# OpenProse now supports importing skills from the anthropics/skills repository
 
-# Define a research agent with web search capability
+import "pdf" from "github:anthropics/skills"
+# import "summarizer" from "npm:@example/summarizer"  # NPM imports not yet implemented
+# import "file-reader" from "./local-skills/file-reader"  # Local imports not yet implemented
+
+# Define a research agent with built-in tools
 agent researcher:
   model: sonnet
   prompt: "You are a research assistant skilled at finding information"
-  skills: ["web-search", "summarizer"]
+  tools: ["bash", "read"]
 
-# Define a documentation agent with file access
+# Define a documentation agent with file access and PDF skills
 agent documenter:
   model: opus
   prompt: "You create comprehensive documentation"
-  skills: ["file-reader", "summarizer"]
+  skills: ["pdf"]
+  tools: ["read", "write", "edit"]
 
 # Research phase
 session: researcher
   prompt: "Search for recent developments in renewable energy storage"
 
-# Documentation phase
+# Documentation phase - uses PDF skills for document creation
 session: documenter
-  prompt: "Create a technical summary of the research findings"
+  prompt: "Based on the research findings above, explain how you would create a comprehensive PDF report on renewable energy storage. What PDF capabilities do you have?"

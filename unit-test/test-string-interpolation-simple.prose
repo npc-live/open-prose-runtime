@@ -1,0 +1,6 @@
+# Simple string interpolation test
+
+let name = "Alice"
+let age = "30"
+
+session "Hello {name}, you are {age} years old"

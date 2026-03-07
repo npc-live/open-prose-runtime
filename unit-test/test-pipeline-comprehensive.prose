@@ -1,0 +1,38 @@
+# Comprehensive Pipeline Test
+
+agent processor:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a processor"
+
+agent checker:
+  model: sonnet
+  prompt: "You evaluate conditions"
+
+# Test 1: Map operation
+const numbers = [1, 2, 3]
+let doubled = numbers | map:
+  let result = session: processor
+    prompt: "Use bash to run: echo 'Value: {item}'"
+
+# Test 2: Parallel map (pmap)
+const tasks = ["A", "B", "C"]
+let parallel_results = tasks | pmap:
+  let output = session: processor
+    prompt: "Use bash to run: echo 'Task {item} done'"
+
+# Test 3: Filter operation
+const all_numbers = [1, 2, 3, 4, 5, 6, 7, 8]
+let filtered = all_numbers | filter:
+  if **{item} is greater than 4**:
+    let keep = session: checker "Keep"
+
+# Test 4: Chained operations
+const items = ["x", "y", "z"]
+let final = items
+  | map:
+      let first = session: processor
+        prompt: "Use bash to run: echo 'Step1: {item}'"
+  | pmap:
+      let second = session: processor
+        prompt: "Use bash to run: echo 'Step2: processed'"

@@ -1,0 +1,38 @@
+# Test Arrow Chains
+# Tests sequential composition with -> operator
+
+agent processor:
+  model: sonnet
+  prompt: "You are a data processor"
+
+agent analyzer:
+  model: sonnet
+  prompt: "You are a data analyzer"
+
+agent reporter:
+  model: sonnet
+  prompt: "You are a report generator"
+
+# Test 1: Simple arrow chain
+let result1 = session: processor "Generate a random number"
+  -> session: analyzer "Analyze this number: {result}"
+  -> session: reporter "Generate a brief report about: {result}"
+
+session: processor
+  prompt: "Final result 1: {result1}"
+
+# Test 2: Arrow chain with multiple steps
+let result2 = session: processor "Start with: hello"
+  -> session: processor "Transform {result} to uppercase"
+  -> session: processor "Add exclamation to {result}"
+
+session: processor
+  prompt: "Final result 2: {result2}"
+
+# Test 3: Arrow chain with variable
+let data = "test data"
+let processed = session: processor "Process: {data}"
+  -> session: analyzer "Analyze: {result}"
+
+session: processor
+  prompt: "Processed result: {processed}"

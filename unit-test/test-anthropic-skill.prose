@@ -1,0 +1,13 @@
+# Test Anthropic Skills Import
+# This test imports a skill from the anthropics/skills repository
+
+import "pdf" from "github:anthropics/skills"
+
+agent document_analyzer:
+  model: sonnet
+  prompt: "You are a document analysis expert"
+  skills: ["pdf"]
+  tools: ["read", "bash"]
+
+session: document_analyzer
+  prompt: "Explain what capabilities you have for working with PDF files based on your skills"

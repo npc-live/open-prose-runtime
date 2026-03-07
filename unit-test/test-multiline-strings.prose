@@ -1,0 +1,53 @@
+# Test Multi-line Strings
+# Tests triple-quoted strings with multiple lines
+
+agent tester:
+  model: sonnet
+  prompt: "You are a helpful tester"
+
+# Test 1: Basic multi-line string
+let greeting = """
+Hello, World!
+This is a multi-line string.
+It spans multiple lines.
+"""
+
+session: tester
+  prompt: "Echo this greeting: {greeting}"
+
+# Test 2: Multi-line string with interpolation
+let name = "Alice"
+let age = 30
+
+let bio = """
+Name: {name}
+Age: {age}
+Status: Active
+"""
+
+session: tester
+  prompt: "Parse this bio: {bio}"
+
+# Test 3: Multi-line string in session prompt
+session: tester
+  prompt: """
+Please help me with the following task:
+1. Read the input
+2. Process it
+3. Generate output
+
+Thank you!
+"""
+
+# Test 4: Multi-line string as agent prompt
+agent complex:
+  model: sonnet
+  prompt: """
+You are an AI assistant with multiple responsibilities:
+- Answer questions accurately
+- Provide helpful suggestions
+- Be concise and clear
+"""
+
+session: complex
+  prompt: "What are your capabilities?"

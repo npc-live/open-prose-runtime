@@ -2,7 +2,7 @@
 # Review code from multiple perspectives sequentially
 
 # First, understand what the code does
-session "Read the files in src/ and provide a brief overview of the codebase structure and purpose."
+session "Read the files in plugin/src/ directory. List the main files and provide a brief overview of the codebase structure and purpose."
 
 # Security review
 session "Review the code for security vulnerabilities. Look for injection risks, authentication issues, and data exposure."

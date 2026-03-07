@@ -1,0 +1,27 @@
+# Test Tool Permissions
+
+# Agent with all tools
+agent unrestricted:
+  model: sonnet
+  skills: ["calculate", "random_number", "string_operations"]
+  prompt: "You are an assistant with full tool access"
+
+# Agent with restricted tools
+agent restricted:
+  model: sonnet
+  skills: ["calculate", "random_number", "string_operations"]
+  permissions:
+    tools: ["calculate"]  # Only allow calculate
+  prompt: "You are a calculator assistant"
+
+# Test 1: Unrestricted agent can use any tool
+let test1 = session: unrestricted
+  prompt: "Generate a random number 1-10, then multiply it by 5"
+
+# Test 2: Restricted agent should only use calculate
+let test2 = session: restricted
+  prompt: "Calculate 25 * 4 + 17"
+
+# Test 3: Restricted agent tries to use disallowed tool (should fail or skip)
+let test3 = session: restricted
+  prompt: "Generate a random number between 1 and 100"

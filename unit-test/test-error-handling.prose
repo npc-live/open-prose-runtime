@@ -1,0 +1,14 @@
+# Test Error Handling
+
+agent normal_agent:
+  model: sonnet
+  skills: ["calculate"]
+  prompt: "You are a calculator"
+
+# This should work fine
+let test1 = session: normal_agent
+  prompt: "Calculate 10 + 20"
+
+# Test tool with invalid expression (should handle gracefully)
+let test2 = session: normal_agent
+  prompt: "Calculate 'invalid syntax here'"

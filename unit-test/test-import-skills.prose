@@ -1,0 +1,18 @@
+# Test Import Skills
+
+# Import custom tool from local file
+import "reverse_text" from "./custom-tool-example.json"
+
+# Define agent that uses the imported tool
+agent text_wizard:
+  model: sonnet
+  skills: ["reverse_text", "string_operations"]
+  prompt: "You are a text manipulation expert"
+
+# Test imported tool
+let test1 = session: text_wizard
+  prompt: "Reverse the text 'OpenProse' for me"
+
+# Test combination of imported and built-in tools
+let test2 = session: text_wizard
+  prompt: "Reverse 'HELLO', then convert it to lowercase"

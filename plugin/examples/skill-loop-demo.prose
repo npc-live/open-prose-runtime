@@ -1,0 +1,43 @@
+# Skill Optimization Loop - Quick Demo
+# 快速演示：测试 → 评估 → 改进 → 再测试
+
+import "frontend-design" from "github:anthropics/skills"
+
+# 设计规格
+let spec = "Create a modern blue button (hex #2563eb) with white text, 16px padding, rounded corners"
+
+# 第一次生成
+agent dev1:
+  model: sonnet
+  prompt: "You are a frontend developer"
+  skills: ["frontend-design"]
+  tools: ["write"]
+
+let v1 = session: dev1
+  prompt: "Create an HTML file with: {spec}. Save to: button-v1.html"
+
+# 评估
+agent qa:
+  model: sonnet
+  prompt: "You are a QA specialist"
+  tools: ["read"]
+
+let eval1 = session: qa
+  prompt: "Read button-v1.html and check if it matches: {spec}. List any issues."
+  context: { spec, v1 }
+
+# 改进生成
+agent dev2:
+  model: sonnet
+  prompt: "You are an improved frontend developer"
+  skills: ["frontend-design"]
+  tools: ["write", "read"]
+
+let v2 = session: dev2
+  prompt: "Fix issues from evaluation and create button-v2.html. Issues: {eval1}"
+  context: { spec, eval1 }
+
+# 最终评估
+session: qa
+  prompt: "Compare button-v1.html and button-v2.html. How much did it improve?"
+  context: { spec, eval1, v2 }

@@ -1,0 +1,20 @@
+# Simple Pipeline Test
+
+agent processor:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a processor"
+
+# Test 1: Simple map
+const numbers = [10, 20, 30]
+
+let results = numbers | map:
+  let output = session: processor
+    prompt: "Use bash to run: echo 'Number: {item}'"
+
+# Test 2: Map with strings
+const fruits = ["apple", "banana"]
+
+let processed = fruits | map:
+  let msg = session: processor
+    prompt: "Use bash to run: echo 'I like {item}'"

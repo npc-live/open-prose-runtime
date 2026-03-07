@@ -1,0 +1,42 @@
+# Tool Calling Demo
+# Demonstrates multi-round tool calling with OpenProse
+
+# Define agents with different tool capabilities
+agent calculator:
+  model: sonnet
+  skills: ["calculate"]
+  prompt: "You are a precise calculator. Use tools when needed."
+
+agent text_processor:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You are a text processing expert. Use tools to manipulate text."
+
+agent math_wizard:
+  model: sonnet
+  skills: ["calculate", "random_number"]
+  prompt: "You are a mathematical wizard who loves using tools to solve problems."
+
+# Example 1: Simple calculation
+let calc1 = session: calculator
+  prompt: "What is (15 + 27) * 3 - 10?"
+
+# Example 2: String processing
+let text1 = session: text_processor
+  prompt: "Convert 'OpenProse' to uppercase and tell me its length"
+
+# Example 3: Multi-round tool calling
+let random_calc = session: math_wizard
+  prompt: "Generate a random number between 10 and 50, then multiply it by 3"
+
+# Example 4: Complex workflow with multiple tools
+let dice_game = session: math_wizard
+  prompt: "Roll two dice (1-6), calculate their sum, and tell me if the sum is greater than 7"
+
+# Example 5: Working with variables
+let base_number = 100
+let multiplier = 5
+
+let calculation = session: calculator
+  prompt: "Divide {base_number} by {multiplier} and tell me the result"
+  context: [base_number, multiplier]

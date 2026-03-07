@@ -1,0 +1,5 @@
+# Test Default Tools
+# Verify that sessions without an agent can still use default tools (read, write, edit, bash)
+
+# Test reading a file without defining an agent
+session "Read the file unit-test/README.md and tell me how many test categories are listed. Just give me the number."

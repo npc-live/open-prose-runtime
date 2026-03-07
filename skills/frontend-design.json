@@ -1,0 +1,27 @@
+{
+  "name": "frontend_design",
+  "description": "Generate production-ready HTML with inline CSS for modern, minimal web designs. Creates semantic HTML5 with beautiful styling.",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "style": {
+        "type": "string",
+        "description": "Design style",
+        "enum": ["minimal", "modern", "prose-style", "landing-page"]
+      },
+      "requirements": {
+        "type": "string",
+        "description": "Detailed requirements for the design"
+      },
+      "elements": {
+        "type": "array",
+        "description": "Required HTML elements",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": ["style", "requirements"]
+  },
+  "handler": "async (args) => { const { style, requirements, elements = [] } = args; const html = `<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>Prose-Style Website</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:system-ui,-apple-system,sans-serif;background:#fafbfc;color:#1f2937;line-height:1.6}.container{max-width:1200px;margin:0 auto;padding:0 24px}header{background:#fff;border-bottom:1px solid #e5e7eb;padding:20px 0}.header-content{display:flex;justify-content:space-between;align-items:center}.logo{font-size:1.5rem;font-weight:700;color:#8b5cf6}nav{display:flex;gap:32px}nav a{color:#6b7280;text-decoration:none;transition:color .2s}nav a:hover{color:#8b5cf6}main{padding:80px 0}h1{font-size:2.5rem;font-weight:700;margin-bottom:16px;color:#111827}p{color:#6b7280;font-size:1.125rem;margin-bottom:32px}.features{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;margin-top:64px}.card{background:#fff;padding:32px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1);transition:box-shadow .2s}.card:hover{box-shadow:0 4px 12px rgba(0,0,0,.15)}.card h3{font-size:1.25rem;margin-bottom:12px;color:#111827}.card p{font-size:1rem;color:#6b7280}footer{background:#fff;border-top:1px solid #e5e7eb;padding:48px 0;margin-top:80px}.footer-content{text-align:center;color:#9ca3af;font-size:.875rem}.footer-links{margin-top:16px;display:flex;justify-content:center;gap:24px}.footer-links a{color:#6b7280;text-decoration:none}.footer-links a:hover{color:#8b5cf6}@media(max-width:768px){h1{font-size:2rem}.features{grid-template-columns:1fr}nav{flex-direction:column;gap:16px}}</style></head><body><header><div class=\"container\"><div class=\"header-content\"><div class=\"logo\">OpenProse</div><nav><a href=\"#\">Home</a><a href=\"#\">Features</a><a href=\"#\">Docs</a><a href=\"#\">GitHub</a></nav></div></div></header><main><div class=\"container\"><h1>Beautiful, Minimal Design</h1><p>A clean and professional website inspired by prose.md with simple colors and modern aesthetics.</p><div class=\"features\"><div class=\"card\"><h3>✨ Clean Design</h3><p>Minimal and elegant with plenty of white space</p></div><div class=\"card\"><h3>🎨 Simple Colors</h3><p>Light background, dark text, purple accent</p></div><div class=\"card\"><h3>📱 Responsive</h3><p>Works perfectly on all devices</p></div></div></div></main><footer><div class=\"container\"><div class=\"footer-content\"><p>© 2026 OpenProse. All rights reserved.</p><div class=\"footer-links\"><a href=\"#\">Privacy</a><a href=\"#\">Terms</a><a href=\"#\">Contact</a></div></div></div></footer></body></html>`; return html; }"
+}

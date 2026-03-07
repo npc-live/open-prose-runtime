@@ -39,6 +39,7 @@ export enum TokenType {
   CATCH = 'CATCH',
   FINALLY = 'FINALLY',
   THROW = 'THROW',
+  RETURN = 'RETURN',
   RETRY = 'RETRY',
   BACKOFF = 'BACKOFF',
   MAP = 'MAP',
@@ -46,6 +47,7 @@ export enum TokenType {
   REDUCE = 'REDUCE',
   PMAP = 'PMAP',
   SKILLS = 'SKILLS',
+  TOOLS = 'TOOLS',
   PERMISSIONS = 'PERMISSIONS',
   CONTEXT = 'CONTEXT',
 
@@ -164,6 +166,7 @@ export const KEYWORDS: Record<string, TokenType> = {
   'catch': TokenType.CATCH,
   'finally': TokenType.FINALLY,
   'throw': TokenType.THROW,
+  'return': TokenType.RETURN,
   'retry': TokenType.RETRY,
   'backoff': TokenType.BACKOFF,
   'map': TokenType.MAP,
@@ -171,6 +174,7 @@ export const KEYWORDS: Record<string, TokenType> = {
   'reduce': TokenType.REDUCE,
   'pmap': TokenType.PMAP,
   'skills': TokenType.SKILLS,
+  'tools': TokenType.TOOLS,
   'permissions': TokenType.PERMISSIONS,
   'context': TokenType.CONTEXT,
 };

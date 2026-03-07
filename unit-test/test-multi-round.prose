@@ -1,0 +1,19 @@
+# Test Multi-Round Tool Calling
+# This tests that the AI can call tools, get results, and continue the conversation
+
+agent math_wizard:
+  model: sonnet
+  skills: ["calculate", "random_number"]
+  prompt: "You are a helpful math assistant. Use tools when needed to solve problems."
+
+# Test 1: Single tool call
+let test1 = session: math_wizard
+  prompt: "Calculate 15 * 8 + 42. Show your work."
+
+# Test 2: Multi-round tool calling (random then calculate)
+let test2 = session: math_wizard
+  prompt: "Generate a random number between 1 and 10, then multiply it by 5. Tell me both the random number and the final result."
+
+# Test 3: Complex multi-round (3+ tool calls)
+let test3 = session: math_wizard
+  prompt: "Generate two random numbers between 1 and 100, then calculate their sum and average. Show all steps."

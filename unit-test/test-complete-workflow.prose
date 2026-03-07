@@ -1,0 +1,32 @@
+# Complete Tool Calling Workflow Test
+# Testing all features: agent skills, multi-round calling, result display
+
+agent data_processor:
+  model: sonnet
+  skills: ["calculate", "string_operations"]
+  prompt: "You are a helpful data processing assistant"
+
+agent math_agent:
+  model: sonnet
+  skills: ["calculate", "random_number"]
+  prompt: "You are a math wizard who loves using tools"
+
+# Test 1: Simple calculation
+let simple_calc = session: math_agent
+  prompt: "What is 100 divided by 4?"
+
+# Test 2: String processing
+let text_process = session: data_processor
+  prompt: "Convert 'hello world' to uppercase and tell me its length"
+
+# Test 3: Multi-round with variables
+let num1 = 42
+let num2 = 58
+
+let math_with_context = session: math_agent
+  prompt: "Add these two numbers together and tell me if the result is greater than 100"
+  context: [num1, num2]
+
+# Test 4: Complex multi-tool workflow
+let complex_test = session: math_agent
+  prompt: "Roll three dice (random 1-6), calculate their sum, then calculate the average. Show all values."

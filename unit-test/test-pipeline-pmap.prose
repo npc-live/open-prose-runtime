@@ -1,0 +1,13 @@
+# Test Pipeline Parallel Map (pmap)
+
+agent processor:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a processor"
+
+# Test: Parallel map - should process all items concurrently
+const items = ["task1", "task2", "task3"]
+
+let results = items | pmap:
+  let output = session: processor
+    prompt: "Use bash to run: echo 'Processing {item}'"

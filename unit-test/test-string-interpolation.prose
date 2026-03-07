@@ -1,0 +1,28 @@
+# Test String Interpolation
+
+agent echo:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test 1: Simple variable interpolation
+let name = "Alice"
+let greeting = session: echo
+  prompt: "Use bash to run: echo 'Hello {name}'"
+
+# Test 2: Number interpolation
+let count = 42
+let msg = session: echo
+  prompt: "Use bash to run: echo 'Count is {count}'"
+
+# Test 3: Loop with interpolation
+const items = ["apple", "banana", "cherry"]
+for item, i in items:
+  let output = session: echo
+    prompt: "Use bash to run: echo 'Item {i}: {item}'"
+
+# Test 4: Multiple variables
+let x = 10
+let y = 20
+let result = session: echo
+  prompt: "Use bash to run: echo 'x={x} y={y} sum={x}+{y}'"

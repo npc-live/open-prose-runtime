@@ -1,0 +1,12 @@
+# Test: Verify skill content is properly injected
+
+import "pdf" from "github:anthropics/skills"
+
+agent tester:
+  model: sonnet
+  prompt: "You are a PDF expert"
+  skills: ["pdf"]
+  tools: ["bash"]
+
+session: tester
+  prompt: "List the first 5 PDF capabilities you have knowledge about. Be specific."

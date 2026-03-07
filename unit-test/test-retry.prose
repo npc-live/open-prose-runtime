@@ -1,0 +1,26 @@
+# Test Retry and Backoff
+
+agent unreliable:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test agent"
+
+# Test 1: Simple retry (will fail initially, then succeed)
+let attempt_count = 0
+
+# Simulate a task that might fail
+let result = session: unreliable
+  prompt: "Use bash to run: echo 'Attempt successful'"
+  retry: 3
+  backoff: "exponential"
+
+# Test 2: Task with linear backoff
+let result2 = session: unreliable
+  prompt: "Use bash to run: echo 'Linear backoff test'"
+  retry: 2
+  backoff: "linear"
+
+# Test 3: No backoff (immediate retry)
+let result3 = session: unreliable
+  prompt: "Use bash to run: echo 'No backoff test'"
+  retry: 3

@@ -1,0 +1,52 @@
+# Test Context Enrichment for Discretion Evaluation
+# Tests that LLM receives rich execution context when evaluating conditions
+
+agent worker:
+  model: sonnet
+  prompt: "You are a task executor"
+
+# Test 1: Simple loop with until condition
+# LLM should see iteration count and previous results
+loop until **we have processed enough items** (max: 5):
+  session: worker
+    prompt: "Processing iteration"
+
+session: worker
+  prompt: "Loop completed"
+
+# Test 2: Loop with quality check
+# LLM should see previous session outputs and decide when quality is good enough
+loop until **the quality is good enough** (max: 10):
+  let result = session: worker
+    prompt: "Improve the quality (this is iteration)"
+
+session: worker
+  prompt: "Quality loop completed"
+
+# Test 3: Conditional execution with context
+# LLM should see variables and execution history
+const task = "write documentation"
+let progress = "started"
+
+if **the task '{task}' with progress '{progress}' needs more work**:
+  progress = "in_progress"
+  session: worker
+    prompt: "Continue working on {task}"
+
+session: worker
+  prompt: "Task {task} is now {progress}"
+
+# Test 4: Choice with execution context
+# LLM should see all variables and recent outputs when choosing
+let complexity = "high"
+let time_available = "limited"
+
+choice **given complexity is {complexity} and time is {time_available}, which approach is best**:
+  option "quick":
+    session: worker "Use quick approach"
+
+  option "thorough":
+    session: worker "Use thorough approach"
+
+  option "balanced":
+    session: worker "Use balanced approach"

@@ -94,6 +94,7 @@ export type StatementNode =
   | ForEachBlockNode
   | TryBlockNode
   | ThrowStatementNode
+  | ReturnStatementNode
   | ChoiceBlockNode
   | IfStatementNode
   | LetBindingNode
@@ -116,7 +117,7 @@ export interface CommentStatementNode extends ASTNode {
  */
 export interface SessionStatementNode extends ASTNode {
   type: 'SessionStatement';
-  prompt: StringLiteralNode | null;
+  prompt: StringLiteralNode | InterpolatedStringNode | null;
   agent: IdentifierNode | null;
   name: IdentifierNode | null;
   properties: PropertyNode[];
@@ -137,8 +138,8 @@ export interface PropertyNode extends ASTNode {
  */
 export interface ImportStatementNode extends ASTNode {
   type: 'ImportStatement';
-  skillName: StringLiteralNode;
-  source: StringLiteralNode;
+  skillName: StringLiteralNode | InterpolatedStringNode;
+  source: StringLiteralNode | InterpolatedStringNode;
 }
 
 /**
@@ -176,9 +177,9 @@ export interface DoBlockNode extends ASTNode {
  */
 export interface ParallelBlockNode extends ASTNode {
   type: 'ParallelBlock';
-  joinStrategy: StringLiteralNode | null;  // "all", "first", "any"
+  joinStrategy: StringLiteralNode | InterpolatedStringNode | null;  // "all", "first", "any"
   anyCount: NumberLiteralNode | null;  // For "any" strategy: how many results needed
-  onFail: StringLiteralNode | null;  // "fail-fast", "continue", "ignore"
+  onFail: StringLiteralNode | InterpolatedStringNode | null;  // "fail-fast", "continue", "ignore"
   body: StatementNode[];
 }
 
@@ -266,7 +267,19 @@ export interface TryBlockNode extends ASTNode {
  */
 export interface ThrowStatementNode extends ASTNode {
   type: 'ThrowStatement';
-  message: StringLiteralNode | null;  // Optional error message
+  message: StringLiteralNode | InterpolatedStringNode | null;  // Optional error message
+}
+
+/**
+ * Return statement - returns a value from a block
+ *
+ * Syntax:
+ *   return expression
+ *   return "value"
+ */
+export interface ReturnStatementNode extends ASTNode {
+  type: 'ReturnStatement';
+  value: ExpressionNode | null;  // Optional return value
 }
 
 /**
@@ -309,7 +322,7 @@ export interface ChoiceBlockNode extends ASTNode {
  */
 export interface ChoiceOptionNode extends ASTNode {
   type: 'ChoiceOption';
-  label: StringLiteralNode;  // The option name
+  label: StringLiteralNode | InterpolatedStringNode;  // The option name
   body: StatementNode[];
 }
 
@@ -504,6 +517,7 @@ export interface ASTVisitor<T = void> {
   visitForEachBlock?(node: ForEachBlockNode): T;
   visitTryBlock?(node: TryBlockNode): T;
   visitThrowStatement?(node: ThrowStatementNode): T;
+  visitReturnStatement?(node: ReturnStatementNode): T;
   visitChoiceBlock?(node: ChoiceBlockNode): T;
   visitChoiceOption?(node: ChoiceOptionNode): T;
   visitIfStatement?(node: IfStatementNode): T;
@@ -562,6 +576,8 @@ export function walkAST<T>(node: ASTNode, visitor: ASTVisitor<T>): T | undefined
       return visitor.visitTryBlock?.(node as TryBlockNode);
     case 'ThrowStatement':
       return visitor.visitThrowStatement?.(node as ThrowStatementNode);
+    case 'ReturnStatement':
+      return visitor.visitReturnStatement?.(node as ReturnStatementNode);
     case 'ChoiceBlock':
       return visitor.visitChoiceBlock?.(node as ChoiceBlockNode);
     case 'ChoiceOption':

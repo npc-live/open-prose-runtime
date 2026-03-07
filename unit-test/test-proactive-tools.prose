@@ -1,0 +1,11 @@
+# Test Proactive Tool Usage
+# Verify that AI uses tools without being explicitly told
+
+# Test 1: AI should read a file
+session "What is the purpose of this project? Check the README.md file."
+
+# Test 2: AI should list files
+session "How many .prose files are in the plugin/examples directory?"
+
+# Test 3: AI should execute commands
+session "What version of Node.js is required? Check the package.json in the plugin directory."

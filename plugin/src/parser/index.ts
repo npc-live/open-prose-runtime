@@ -66,6 +66,7 @@ export type {
   ForEachBlockNode,
   TryBlockNode,
   ThrowStatementNode,
+  ReturnStatementNode,
   InterpolatedStringNode,
   ChoiceBlockNode,
   ChoiceOptionNode,

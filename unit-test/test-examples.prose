@@ -1,0 +1,21 @@
+# Test Examples Showcase
+
+# Example 1: Simple session
+let greeting = session "Say hello and tell me you're an AI assistant"
+
+# Example 2: Variables and context
+let topic = "quantum computing"
+let explanation = session "Explain {topic} in one simple sentence"
+
+# Example 3: Context passing
+let summary = session "Make a 2-point summary of the explanation above"
+  context: explanation
+
+# Example 4: Agent definition
+agent mathematician:
+  model: sonnet
+  prompt: "You are a mathematician who provides clear explanations"
+
+# Example 5: Use the agent
+let math_answer = session: mathematician
+  prompt: "What is the Pythagorean theorem? Answer in one sentence"

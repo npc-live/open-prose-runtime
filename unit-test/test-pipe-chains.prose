@@ -1,0 +1,41 @@
+# Test Pipe Chains
+# Tests chained pipeline operations
+
+agent processor:
+  model: sonnet
+  prompt: "You are a data processor"
+
+# Test 1: Multiple pipeline operations chained
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+let result = numbers
+  | filter:
+      if **{item} is greater than 5**:
+        session: processor "Keep {item}"
+  | map:
+      session: processor "Double the value {item}"
+
+session: processor
+  prompt: "Filtered and mapped result: {result}"
+
+# Test 2: Pipeline with pmap
+const items = ["apple", "banana", "cherry"]
+
+let processed = items
+  | pmap:
+      session: processor "Process {item} in parallel"
+  | filter:
+      if **{item} is not empty**:
+        session: processor "Keep {item}"
+
+session: processor
+  prompt: "Parallel processed: {processed}"
+
+# Test 3: Simple map chain
+const words = ["hello", "world", "test"]
+
+let transformed = words | map:
+  session: processor "Transform {item}"
+
+session: processor
+  prompt: "Transformed words: {transformed}"

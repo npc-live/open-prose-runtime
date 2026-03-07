@@ -1,0 +1,293 @@
+# Skill Optimization Loop - Simplified Version
+# 测试和优化 skill 的闭环系统（无需图片输入）
+
+# 导入相关 skills
+import "frontend-design" from "github:anthropics/skills"
+import "web-artifacts-builder" from "github:anthropics/skills"
+
+# ==================== 阶段 1: 设计规格 ====================
+
+let design_spec = """
+Modern Landing Page Design Specification:
+
+**Color Scheme:**
+- Primary: #2563eb (Vibrant Blue)
+- Secondary: #1e293b (Dark Slate)
+- Accent: #f59e0b (Warm Amber)
+- Background: #f8fafc (Soft White)
+- Text: #1f2937 (Dark Gray)
+
+**Layout Requirements:**
+1. Hero section - full width, centered content, gradient background
+2. Feature section - 3-column grid on desktop, stack on mobile
+3. CTA section - centered with prominent button
+4. Footer - dark background, centered text
+
+**Typography:**
+- Heading (H1): 3.5rem (56px), bold, 'Inter' or system sans-serif
+- Subheading (H2): 2rem (32px), semibold
+- Body text: 1.125rem (18px), regular, line-height 1.6
+- Button text: 1rem, semibold, uppercase letter-spacing
+
+**Components:**
+- Hero: Large heading "Build Amazing Products", subtitle, CTA button
+- Features: 3 cards with icons (use emoji: 🚀, ⚡, 🎯), title, description
+- CTA: "Get Started Today" button, 16px padding, rounded corners
+- Footer: Copyright text, dark background (#1e293b)
+
+**Design Style:**
+- Modern, clean, minimalist
+- Subtle shadows for depth
+- Smooth hover transitions
+- Responsive breakpoints: 768px (tablet), 1024px (desktop)
+
+**Spacing:**
+- Container max-width: 1200px
+- Section padding: 80px vertical, 20px horizontal
+- Card gap: 32px
+- Element margins: 16px between paragraphs
+"""
+
+# ==================== 阶段 2: 生成初始页面 ====================
+
+agent web_developer:
+  model: sonnet
+  prompt: "You are an expert frontend developer"
+  skills: ["frontend-design", "web-artifacts-builder"]
+  tools: ["write", "read"]
+
+let initial_webpage = session: web_developer
+  prompt: """
+  Create a complete HTML page with inline CSS based on this specification:
+
+  {design_spec}
+
+  Requirements:
+  - Pure HTML5 and CSS3 (NO JavaScript)
+  - All CSS inline in <style> tag
+  - Complete, ready-to-open HTML file
+  - Follow ALL colors, sizes, and spacing from the spec
+  - Make it responsive
+  - Use semantic HTML
+
+  Use the WRITE tool to save to: generated-landing-page.html
+  """
+
+# ==================== 阶段 3: 自动评估 ====================
+
+agent qa_evaluator:
+  model: opus
+  prompt: "You are a meticulous design QA specialist"
+  tools: ["read", "bash"]
+
+let evaluation = session: qa_evaluator
+  prompt: """
+  Read and evaluate the generated webpage: generated-landing-page.html
+
+  Compare against the specification:
+  {design_spec}
+
+  Check for:
+  1. **Color Accuracy**: Are all colors exactly as specified?
+  2. **Typography**: Correct font sizes, weights, line-heights?
+  3. **Layout**: All sections present and properly structured?
+  4. **Spacing**: Padding and margins match specification?
+  5. **Components**: All required elements included?
+  6. **Responsiveness**: Media queries for 768px and 1024px?
+  7. **Semantic HTML**: Proper use of header, main, section, footer?
+
+  For EACH discrepancy, note:
+  - What was specified
+  - What was implemented
+  - Severity (Critical/High/Medium/Low)
+
+  Use READ tool to inspect the file, and BASH tool to count lines or search for patterns.
+  """
+  context: design_spec
+
+# ==================== 阶段 4: 根因分析 ====================
+
+agent root_cause_analyst:
+  model: opus
+  prompt: "You are an AI workflow optimization expert"
+  tools: ["read"]
+
+let root_cause = session: root_cause_analyst
+  prompt: """
+  Analyze WHY discrepancies occurred.
+
+  Evaluation Report:
+  {evaluation}
+
+  Categorize each issue:
+
+  **Category A - Skill Deficiency:**
+  Is the imported skill missing specific guidance?
+  Example: No color palette management, no responsive patterns, etc.
+
+  **Category B - Prompt Clarity:**
+  Was the prompt too vague or ambiguous?
+  Example: "Modern design" without hex codes, "large button" without pixel values
+
+  **Category C - Agent Behavior:**
+  Did the agent ignore instructions or misinterpret them?
+  Example: Skipped a section, used wrong units (rem vs px)
+
+  **Category D - Tool Usage:**
+  Did file I/O fail or was the file not written properly?
+
+  For each issue:
+  1. **Category**: A, B, C, or D
+  2. **Root Cause**: Detailed explanation
+  3. **Evidence**: Quote from spec and generated code
+  4. **Fix Strategy**: How to prevent this in future
+
+  Provide a structured analysis table.
+  """
+  context: { design_spec, evaluation }
+
+# ==================== 阶段 5: 生成改进措施 ====================
+
+agent improvement_architect:
+  model: opus
+  prompt: "You are a continuous improvement architect"
+  tools: ["write"]
+
+let improvements = session: improvement_architect
+  prompt: """
+  Generate concrete improvements based on root cause analysis.
+
+  Root Cause Analysis:
+  {root_cause}
+
+  Generate:
+
+  **For Category A (Skill Deficiency):**
+  Create an improved skill file with missing guidance.
+  Save as: skills/improved-frontend-design.md
+
+  Format:
+  ```markdown
+  ---
+  name: improved-frontend-design
+  description: Enhanced frontend design with color and spacing guidance
+  ---
+
+  # Improved Frontend Design Skill
+
+  [Add missing knowledge here]
+  ```
+
+  **For Category B (Prompt Clarity):**
+  Write an improved prompt template.
+  Save as: improved-prompt-template.txt
+
+  **For Category C (Agent Behavior):**
+  List specific instructions to add to agent prompt.
+
+  **For Category D (Tool Usage):**
+  Provide corrected tool usage examples.
+
+  Generate ALL artifacts using the WRITE tool.
+  """
+  context: { design_spec, evaluation, root_cause }
+
+# ==================== 阶段 6: 二次生成（改进版）====================
+
+agent web_developer_v2:
+  model: sonnet
+  prompt: """
+  You are an expert frontend developer (Version 2 - Improved).
+
+  CRITICAL INSTRUCTIONS:
+  - Read ALL improvement recommendations carefully
+  - Follow color codes EXACTLY (use hex values verbatim)
+  - Match font sizes PRECISELY (convert rem to px if needed)
+  - Include ALL required sections
+  - Double-check spacing values
+  """
+  skills: ["frontend-design", "web-artifacts-builder"]
+  tools: ["write", "read"]
+
+let improved_webpage = session: web_developer_v2
+  prompt: """
+  Create an IMPROVED version of the landing page.
+
+  Original Specification:
+  {design_spec}
+
+  Issues Found:
+  {evaluation}
+
+  Improvement Guidance:
+  {improvements}
+
+  Generate a PERFECT implementation that addresses ALL identified issues.
+  Save to: generated-landing-page-v2.html
+
+  MANDATORY:
+  - Every color must match specification exactly
+  - Every font size must match specification exactly
+  - All sections must be present
+  - Responsive breakpoints at 768px and 1024px
+  - Use WRITE tool to create the file
+  """
+  context: { design_spec, evaluation, improvements }
+
+# ==================== 阶段 7: 最终对比 ====================
+
+agent final_inspector:
+  model: opus
+  prompt: "You are the final quality inspector"
+  tools: ["read", "bash"]
+
+let final_report = session: final_inspector
+  prompt: """
+  Perform final inspection and comparison.
+
+  Read both versions:
+  1. generated-landing-page.html (original)
+  2. generated-landing-page-v2.html (improved)
+
+  Specification:
+  {design_spec}
+
+  Provide:
+  1. **Side-by-Side Comparison**: What changed between v1 and v2?
+  2. **Issue Resolution Rate**: How many issues were fixed? (X/Y = Z%)
+  3. **Remaining Issues**: Any issues still present?
+  4. **Quality Score**: Rate v2 out of 100
+  5. **Lessons Learned**: Key takeaways for future iterations
+
+  Use READ tool to inspect both files.
+  Use BASH tool to run: diff generated-landing-page.html generated-landing-page-v2.html
+  """
+  context: { design_spec, evaluation, improvements, improved_webpage }
+
+# ==================== 最终总结 ====================
+
+agent report_writer:
+  model: opus
+  prompt: "You are a technical report writer"
+  tools: ["write"]
+
+session: report_writer
+  prompt: """
+  Create a comprehensive Skill Optimization Loop Report.
+
+  Include all stages:
+  1. Design Specification
+  2. Initial Generation Results
+  3. Evaluation Findings
+  4. Root Cause Analysis
+  5. Improvement Actions Taken
+  6. Second Generation Results
+  7. Final Comparison
+  8. Overall Success Metrics
+  9. Recommendations for Future Loops
+
+  Save the report to: skill-optimization-report.md
+
+  Use markdown formatting with tables, bullet points, and code blocks.
+  """
+  context: { design_spec, initial_webpage, evaluation, root_cause, improvements, improved_webpage, final_report }

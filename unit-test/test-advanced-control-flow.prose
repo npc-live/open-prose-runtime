@@ -1,0 +1,78 @@
+# Test Advanced Control Flow: loop, try/catch, parallel
+
+agent tester:
+  model: sonnet
+  tools: ["write", "bash"]
+  prompt: "You are a test agent"
+
+# ============================================
+# Test 1: Loop with condition (until)
+# ============================================
+
+let count = 0
+
+loop until **count is 3 or more** (max: 5) as i:
+  let increment = session: tester
+    prompt: "Use bash to run: echo 'Loop iteration {i}'"
+  count = i
+
+# ============================================
+# Test 2: Try/Catch (error handling)
+# ============================================
+
+try:
+  let safe_op = session: tester
+    prompt: "Use write to create './try-test.txt' with 'Try block executed'"
+catch:
+  let error_handler = session: tester
+    prompt: "Use write to create './catch-test.txt' with 'Error caught'"
+
+# ============================================
+# Test 3: Try/Catch with error variable
+# ============================================
+
+try:
+  # This will succeed
+  let success = session: tester
+    prompt: "Use bash to run: echo 'This works'"
+catch as err:
+  let handle_err = session: tester
+    prompt: "Use write to create './error-info.txt' with 'Error: {err}'"
+
+# ============================================
+# Test 4: Try/Finally
+# ============================================
+
+try:
+  let operation = session: tester
+    prompt: "Use write to create './operation.txt' with 'Operation'"
+finally:
+  let cleanup = session: tester
+    prompt: "Use write to append ' - Cleanup done' to './operation.txt'"
+
+# ============================================
+# Test 5: Parallel block (basic)
+# ============================================
+
+parallel:
+  let task_a = session: tester
+    prompt: "Use write to create './task-a.txt' with 'Task A'"
+  let task_b = session: tester
+    prompt: "Use write to create './task-b.txt' with 'Task B'"
+  let task_c = session: tester
+    prompt: "Use write to create './task-c.txt' with 'Task C'"
+
+# ============================================
+# Test 6: Simple loop (no condition)
+# ============================================
+
+loop (max: 2) as i:
+  let simple = session: tester
+    prompt: "Use bash to run: echo 'Simple loop {i}'"
+
+# ============================================
+# Cleanup
+# ============================================
+
+let cleanup_all = session: tester
+  prompt: "Use bash to run: rm -f try-test.txt operation.txt task-a.txt task-b.txt task-c.txt"

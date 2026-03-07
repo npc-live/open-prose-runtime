@@ -1,0 +1,14 @@
+# Test Improved Tool Call Display
+
+agent calculator:
+  model: sonnet
+  skills: ["calculate", "random_number", "string_operations"]
+  prompt: "You are a helpful calculator assistant"
+
+# Test with tool calls
+let calc_result = session: calculator
+  prompt: "Calculate 25 * 4 + 17"
+
+# Test with multiple tools
+let multi_tool = session: calculator
+  prompt: "Generate a random number 1-50, multiply it by 2, then convert '42' to uppercase"

@@ -1,0 +1,13 @@
+# Test execution example
+# This demonstrates the basic execution engine
+
+# Declare some variables
+let topic = "AI agents"
+let count = 3
+
+# Execute a simple session
+let research = session "Research about AI agents in depth"
+
+# Execute another session with context
+let summary = session "Summarize the key findings"
+  context: research

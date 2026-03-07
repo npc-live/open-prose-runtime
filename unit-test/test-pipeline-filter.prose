@@ -1,0 +1,13 @@
+# Test Pipeline Filter
+
+agent checker:
+  model: sonnet
+  prompt: "You are a checker that evaluates conditions"
+
+# Test: Filter numbers
+const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+# Filter using if statement with discretion
+let evens = numbers | filter:
+  if **{item} is an even number**:
+    let keep = session: checker "Keep this"

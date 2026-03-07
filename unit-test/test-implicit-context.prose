@@ -1,0 +1,11 @@
+# Test Implicit Context Passing Between Sessions
+# This test verifies that sessions automatically see previous session outputs
+
+# First session establishes some facts
+session "I'm thinking of a number. It's 42. And my favorite color is blue. Remember these!"
+
+# Second session should be able to reference the previous session without explicit context
+session "What was the number and color I mentioned in my previous message? Answer briefly in format: 'Number: X, Color: Y'"
+
+# Third session should see both previous sessions
+session "How many messages have I sent so far? List the topics briefly."

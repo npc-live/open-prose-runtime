@@ -1,0 +1,91 @@
+# NPX Skills Integration Example
+# Demonstrates how to use 'npx skills add <owner/repo>' in OpenProse
+
+# Import the npx_skills_add tool
+import "npx_skills_add" from "./skills/npx-skills.json"
+import "shell_exec" from "./skills/shell-exec.json"
+
+# Define a skills manager agent
+agent skills_manager:
+  model: sonnet
+  skills: ["npx_skills_add", "shell_exec"]
+  prompt: "You are an expert at managing and installing skills from GitHub repositories."
+
+# ==========================================
+# Method 1: Direct Tool Call
+# ==========================================
+
+# Add a skill from GitHub using npx
+let install_skill = session: skills_manager
+  prompt: """
+Use the npx_skills_add tool to install a skill from GitHub.
+
+Repository: "anthropics/example-skills" (or any valid skills repo)
+
+Call the tool like this:
+npx_skills_add(repo: "anthropics/example-skills")
+
+Then tell me if it was successful.
+"""
+
+# ==========================================
+# Method 2: Shell Command Execution
+# ==========================================
+
+# Alternative: Use shell_exec directly
+let manual_install = session: skills_manager
+  prompt: """
+Use shell_exec tool to run the npx skills command directly:
+
+Command: "npx skills add anthropics/example-skills"
+
+Execute it and report the results.
+"""
+
+# ==========================================
+# Method 3: Check Available Skills
+# ==========================================
+
+# List what skills are available
+let list_skills = session: skills_manager
+  prompt: """
+After installing skills, use shell_exec to check what's available:
+
+Command: "npx skills list"
+
+Show me what skills are now installed.
+"""
+
+# ==========================================
+# Validation
+# ==========================================
+
+agent reporter:
+  model: sonnet
+  skills: ["string_operations"]
+
+let summary = session: reporter
+  prompt: """
+Create a summary report of the skill installation process:
+
+Installation attempt: {install_skill}
+Manual installation: {manual_install}
+Available skills: {list_skills}
+
+Format:
+━━━━━━━━━━━━━━━━━━━━
+NPX SKILLS INTEGRATION
+━━━━━━━━━━━━━━━━━━━━
+
+Installation Status:
+- Method 1 (npx_skills_add): [SUCCESS/FAILED]
+- Method 2 (shell_exec): [SUCCESS/FAILED]
+
+Available Skills:
+[List any skills found]
+
+Recommendations:
+[Any next steps]
+━━━━━━━━━━━━━━━━━━━━
+"""
+  context: [install_skill, manual_install, list_skills]

@@ -1,0 +1,26 @@
+# Test: Skills vs Tools 分离
+
+# Skills: 引导提示词的规范/知识
+# Tools: 可执行的函数
+
+agent web_designer:
+  model: sonnet
+  skills: ["frontend-design"]       # 技能：网页设计规范（补充提示词）
+  tools: ["read", "write", "bash"]  # 工具：可执行函数
+  prompt: "You are a web designer"
+
+# Test 1: 使用 tools 执行文件操作
+let create_file = session: web_designer
+  prompt: "Use write tool to create './test-output.txt' with content 'Hello Tools!'"
+
+# Test 2: 使用 tools 读取文件
+let read_file = session: web_designer
+  prompt: "Use read tool to read './test-output.txt'"
+
+# Test 3: 使用 tools 执行 bash
+let bash_cmd = session: web_designer
+  prompt: "Use bash tool to run: cat test-output.txt"
+
+# Cleanup
+let cleanup = session: web_designer
+  prompt: "Use bash tool to run: rm test-output.txt"

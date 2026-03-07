@@ -1,0 +1,30 @@
+# Test Built-in Tools: read, write, bash, edit
+
+agent file_ops:
+  model: sonnet
+  skills: ["write", "read", "bash", "edit"]
+  prompt: "You manage file operations"
+
+# Test 1: Write a file
+let write_result = session: file_ops
+  prompt: "Use write tool to create a file at './test-file.txt' with content 'Hello OpenProse!'"
+
+# Test 2: Read the file
+let read_result = session: file_ops
+  prompt: "Use read tool to read the content of './test-file.txt'"
+
+# Test 3: Edit the file (append)
+let edit_append = session: file_ops
+  prompt: "Use edit tool to append '\nThis is line 2' to './test-file.txt'"
+
+# Test 4: Read again to verify
+let read_after_edit = session: file_ops
+  prompt: "Use read tool to read './test-file.txt' again"
+
+# Test 5: Bash command
+let bash_result = session: file_ops
+  prompt: "Use bash tool to run command: cat test-file.txt"
+
+# Test 6: Cleanup
+let cleanup = session: file_ops
+  prompt: "Use bash tool to run command: rm test-file.txt"

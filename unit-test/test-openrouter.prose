@@ -1,0 +1,18 @@
+# Test OpenRouter Integration
+
+# Simple greeting
+let greeting = session "Say hello and introduce yourself in one sentence"
+
+# Research with context
+let topic = "OpenProse"
+let research = session "Tell me what {topic} is in 2-3 sentences"
+
+# Summarize with context
+let summary = session "Based on the research, give me 3 key points"
+  context: research
+
+# Math calculation
+let x = 5
+let y = 10
+let calculation = session "What is {x} + {y}? Just give me the number."
+  context: { x, y }

@@ -1,0 +1,50 @@
+# Test Choice Blocks
+# Tests AI-driven branch selection
+
+agent worker:
+  model: sonnet
+  prompt: "You are a helpful assistant"
+
+# Test 1: Simple choice between two options
+choice **which approach is faster**:
+  option "quick":
+    let result1 = "Quick approach selected"
+    session: worker
+      prompt: "Quick result: {result1}"
+
+  option "thorough":
+    let result1 = "Thorough approach selected"
+    session: worker
+      prompt: "Thorough result: {result1}"
+
+# Test 2: Choice with multiple options
+const task = "build a website"
+
+choice **for {task}, which technology is best**:
+  option "React":
+    let tech = "React"
+    session: worker
+      prompt: "Building with {tech}"
+
+  option "Vue":
+    let tech = "Vue"
+    session: worker
+      prompt: "Building with {tech}"
+
+  option "Plain HTML":
+    let tech = "Plain HTML"
+    session: worker
+      prompt: "Building with {tech}"
+
+# Test 3: Choice in a loop
+const strategies = ["optimize", "refactor", "test"]
+
+for strategy in strategies:
+  choice **for {strategy}, should we do it now or later**:
+    option "now":
+      session: worker
+        prompt: "Doing {strategy} now"
+
+    option "later":
+      session: worker
+        prompt: "Scheduling {strategy} for later"

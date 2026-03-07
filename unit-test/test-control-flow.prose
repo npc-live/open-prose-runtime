@@ -1,0 +1,72 @@
+# Test Control Flow: repeat, for, if
+
+agent tester:
+  model: sonnet
+  tools: ["write", "bash"]
+  prompt: "You are a test agent"
+
+# ============================================
+# Test 1: Repeat Block
+# ============================================
+
+let counter = 0
+
+repeat 3:
+  let msg = session: tester
+    prompt: "Use write tool to append 'Iteration\\n' to './repeat-test.txt'"
+
+# Verify repeat
+let verify_repeat = session: tester
+  prompt: "Use bash tool to run: wc -l repeat-test.txt"
+
+# ============================================
+# Test 2: Repeat with Index Variable
+# ============================================
+
+repeat 3 as i:
+  let indexed = session: tester
+    prompt: "Use write tool to append 'Index {i}\\n' to './repeat-index.txt'"
+
+# ============================================
+# Test 3: For-each Block
+# ============================================
+
+const items = ["apple", "banana", "cherry"]
+
+for item in items:
+  let processed = session: tester
+    prompt: "Use write tool to append '{item}\\n' to './foreach-test.txt'"
+
+# ============================================
+# Test 4: For-each with Index
+# ============================================
+
+for fruit, idx in items:
+  let indexed_fruit = session: tester
+    prompt: "Use write tool to append '{idx}: {fruit}\\n' to './foreach-index.txt'"
+
+# ============================================
+# Test 5: If Statement (true condition)
+# ============================================
+
+if **the number 5 is greater than 3**:
+  let if_true = session: tester
+    prompt: "Use write tool to create './if-true.txt' with content 'Condition was true'"
+
+# ============================================
+# Test 6: If/Else Statement
+# ============================================
+
+if **the number 2 is greater than 10**:
+  let if_false_then = session: tester
+    prompt: "Use write tool to create './if-then.txt' with 'This should not run'"
+else:
+  let if_false_else = session: tester
+    prompt: "Use write tool to create './if-else.txt' with 'Else branch executed'"
+
+# ============================================
+# Cleanup
+# ============================================
+
+let cleanup = session: tester
+  prompt: "Use bash tool to run: rm -f repeat-test.txt repeat-index.txt foreach-test.txt foreach-index.txt if-true.txt if-else.txt"

@@ -1,0 +1,85 @@
+# Test Shell Execution and NPX Skills Integration
+
+# Import shell execution tool
+import "shell_exec" from "./skills/shell-exec.json"
+
+# Import npx skills tool
+import "npx_skills_add" from "./skills/npx-skills.json"
+
+# Define an agent with shell capabilities
+agent system_admin:
+  model: sonnet
+  skills: ["shell_exec", "string_operations"]
+  prompt: "You are a system administrator who can execute shell commands safely."
+
+# Define an agent for skills management
+agent skills_manager:
+  model: sonnet
+  skills: ["npx_skills_add", "shell_exec"]
+  prompt: "You are a skills manager who can install and manage external skills."
+
+# ==========================================
+# Test 1: Basic Shell Commands
+# ==========================================
+
+# Test simple shell command
+let test_ls = session: system_admin
+  prompt: "List files in the current directory using the shell_exec tool. Use command: 'ls -la'"
+
+# Test getting Node.js version
+let test_node_version = session: system_admin
+  prompt: "Check the Node.js version using shell_exec tool. Command: 'node --version'"
+
+# ==========================================
+# Test 2: NPX Skills Add
+# ==========================================
+
+# Example: Add a skill from GitHub
+# Note: Replace with actual skill repository
+let add_skill_example = session: skills_manager
+  prompt: """
+Use the npx_skills_add tool to demonstrate how to add a skill from GitHub.
+
+Example repository format: 'owner/repo'
+For demonstration, you can try: 'anthropics/skills' or similar
+
+Call the tool with:
+- repo: "anthropics/skills"
+
+Then explain what happened.
+"""
+
+# ==========================================
+# Test 3: Combined Shell Operations
+# ==========================================
+
+# Check if npx is available
+let check_npx = session: system_admin
+  prompt: "Check if 'npx' is available by running 'npx --version' using shell_exec"
+
+# List installed packages
+let check_packages = session: system_admin
+  prompt: "List globally installed npm packages using shell_exec with command: 'npm list -g --depth=0'"
+
+# ==========================================
+# Test 4: Safe Command Validation
+# ==========================================
+
+agent validator:
+  model: sonnet
+  skills: ["string_operations"]
+  prompt: "You validate shell commands for safety."
+
+let validate_commands = session: validator
+  prompt: """
+Review these shell command results and report:
+
+1. Node version check: {test_node_version}
+2. NPX availability: {check_npx}
+
+Summarize:
+- Are the tools available?
+- Is the system ready for npx skills add?
+- Any warnings or recommendations?
+"""
+  context: [test_node_version, check_npx]

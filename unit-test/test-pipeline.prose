@@ -1,0 +1,31 @@
+# Test Pipeline Operations
+
+agent processor:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a test processor"
+
+# Test 1: Pipeline map - transform array
+const numbers = [1, 2, 3, 4, 5]
+
+let doubled = numbers | map:
+  let result = session: processor
+    prompt: "Use bash to run: echo 'Double of {item} is $((2 * {item}))'"
+
+# Test 2: Pipeline map with strings
+const names = ["Alice", "Bob", "Charlie"]
+
+let greetings = names | map:
+  let greeting = session: processor
+    prompt: "Use bash to run: echo 'Hello, {item}!'"
+
+# Test 3: Chained pipeline - map then map
+const items = ["apple", "banana"]
+
+let processed = items
+  | map:
+      let upper = session: processor
+        prompt: "Use bash to run: echo '{item}' | tr '[:lower:]' '[:upper:]'"
+  | map:
+      let prefixed = session: processor
+        prompt: "Use bash to run: echo 'FRUIT: {item}'"

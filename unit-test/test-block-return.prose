@@ -1,0 +1,58 @@
+# Test Block Return Values
+# Tests that blocks can return values using the return statement
+
+agent tester:
+  model: sonnet
+  prompt: "You are a helpful test agent"
+
+# Test 1: Simple return value
+block get_greeting(name):
+  return "Hello, {name}!"
+
+let greeting = do get_greeting("Alice")
+session: tester
+  prompt: "Confirm this greeting: {greeting}"
+
+# Test 2: Return from conditional
+block check_number(num):
+  if **{num} is positive**:
+    return "positive"
+  elif **{num} is negative**:
+    return "negative"
+  else:
+    return "zero"
+
+let result = do check_number(42)
+session: tester
+  prompt: "The number 42 is: {result}"
+
+# Test 3: Early return
+block process_value(val):
+  if **{val} is null or empty**:
+    return "error"
+
+  let processed = session: tester
+    prompt: "Process this value: {val}"
+
+  return processed
+
+let output = do process_value("test data")
+session: tester
+  prompt: "Processed result: {output}"
+
+# Test 4: Anonymous block with return
+let computed = do:
+  let x = 10
+  let y = 20
+  return x
+
+session: tester
+  prompt: "The computed value is: {computed}"
+
+# Test 5: Block without explicit return (should return null)
+block no_return():
+  let temp = "This block has no return statement"
+
+let nothing = do no_return()
+session: tester
+  prompt: "This should be null: {nothing}"

@@ -1,0 +1,23 @@
+# Test Tool Execution Tracking
+
+agent math_agent:
+  model: sonnet
+  skills: ["calculate", "random_number"]
+  prompt: "You are a math wizard"
+
+# Test 1: Simple calculation
+let calc1 = session: math_agent
+  prompt: "Calculate 15 + 27"
+
+# Test 2: Multiple tool calls
+let calc2 = session: math_agent
+  prompt: "Generate 2 random numbers between 1-20, then calculate their sum"
+
+# Test 3: String operations
+agent text_agent:
+  model: sonnet
+  skills: ["string_operations", "calculate"]
+  prompt: "You are a text processing assistant"
+
+let text1 = session: text_agent
+  prompt: "Convert 'HELLO' to lowercase and tell me its length"

@@ -1,0 +1,14 @@
+# Simple test of block return values
+
+agent tester:
+  model: sonnet
+  prompt: "You are a helpful test agent"
+
+# Test 1: Block that returns a string
+block get_message():
+  return "Hello from block"
+
+let msg = do get_message()
+
+session: tester
+  prompt: "Echo this message: {msg}"

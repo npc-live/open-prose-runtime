@@ -1,0 +1,82 @@
+# Syntax Check Test - 检查哪些语法可用
+
+agent tester:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a tester"
+
+# ============================================
+# ✅ 这些语法可以正常工作
+# ============================================
+
+# 1. 基础 Session
+let basic = session: tester
+  prompt: "Echo 'basic session works'"
+
+# 2. Let/Const 绑定
+let variable = session: tester
+  prompt: "Echo 'let binding works'"
+
+const constant = session: tester
+  prompt: "Echo 'const binding works'"
+
+# 3. 变量赋值
+variable = session: tester
+  prompt: "Echo 'assignment works'"
+
+# 4. Context
+let with_context = session: tester
+  prompt: "Echo 'context works'"
+  context: [basic, variable]
+
+# 5. Tools
+let tool_test = session: tester
+  prompt: "Use bash tool to run: echo 'tools work'"
+
+# ============================================
+# ❌ 这些语法会报错 "Unsupported statement type"
+# ============================================
+
+# 6. Repeat - 固定次数循环
+# repeat 3:
+#   let repeat_test = session: tester
+#     prompt: "Iteration"
+
+# 7. Loop - 无限循环
+# loop:
+#   let loop_test = session: tester
+#     prompt: "Loop iteration"
+
+# 8. For-each - 遍历数组
+# let items = ["a", "b", "c"]
+# for item in items:
+#   let foreach_test = session: tester
+#     prompt: "Process item: {item}"
+
+# 9. If/else - 条件分支
+# if **true**:
+#   let if_test = session: tester
+#     prompt: "If branch"
+# else:
+#   let else_test = session: tester
+#     prompt: "Else branch"
+
+# 10. Try/catch - 错误处理
+# try:
+#   let try_test = session: tester
+#     prompt: "Risky operation"
+# catch:
+#   let catch_test = session: tester
+#     prompt: "Handle error"
+
+# 11. Parallel - 并发执行
+# parallel:
+#   let a = session: tester
+#     prompt: "Task A"
+#   let b = session: tester
+#     prompt: "Task B"
+
+# 12. Do block
+# do:
+#   let do_test = session: tester
+#     prompt: "Do block test"

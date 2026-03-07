@@ -1,0 +1,20 @@
+# OpenProse Showcase - Demonstrating Core Features
+
+# Test 1: Variable and interpolation
+let language = "Python"
+let intro = session "In one sentence, what is the main strength of the programming language Python?"
+
+# Test 2: Context passing
+let summary = session "Give me a 2-point summary of what you just said"
+  context: intro
+
+# Test 3: Multiple variables with context
+let num1 = 15
+let num2 = 27
+let calc = session "Add these two numbers and tell me the result. Just give me: number1 + number2 = answer"
+  context: { num1, num2 }
+
+# Test 4: Sequential workflow
+let step1 = session "Name one famous scientist"
+let step2 = session "Tell me in one sentence what this scientist is known for"
+  context: step1

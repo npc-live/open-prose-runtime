@@ -1084,6 +1084,28 @@ export class Validator {
   private validateThrowStatement(throwStmt: ThrowStatementNode): void {
     // Validate message if present
     if (throwStmt.message) {
+      // Handle InterpolatedString nodes
+      if (throwStmt.message.type === 'InterpolatedString') {
+        // Validate each part
+        for (const part of throwStmt.message.parts) {
+          if (part.type === 'StringLiteral') {
+            this.validateStringLiteral(part);
+          } else if (part.type === 'Identifier') {
+            if (!this.isVariableDefined(part.name)) {
+              this.addError(`Undefined variable in interpolation: "${part.name}"`, part.span);
+            }
+          }
+        }
+        return;
+      }
+
+      // Handle regular StringLiteral nodes
+      // Safety check for value
+      if (throwStmt.message.value === undefined || throwStmt.message.value === null) {
+        this.addError('Invalid throw message: missing value', throwStmt.message.span);
+        return;
+      }
+
       if (!throwStmt.message.value.trim()) {
         this.addWarning(
           'Throw message is empty',
@@ -1465,6 +1487,13 @@ export class Validator {
           this.validateSkillsProperty(prop);
         }
         break;
+      case 'tools':
+        if (context !== 'agent') {
+          this.addWarning('Tools property is only valid in agent definitions', prop.name.span);
+        } else {
+          this.validateToolsProperty(prop);
+        }
+        break;
       case 'permissions':
         if (context !== 'agent') {
           this.addWarning('Permissions property is only valid in agent definitions', prop.name.span);
@@ -1528,6 +1557,36 @@ export class Validator {
     // Warn on empty skills array
     if (arrayValue.elements.length === 0) {
       this.addWarning('Skills array is empty', prop.value.span);
+    }
+  }
+
+  /**
+   * Validate tools property
+   */
+  private validateToolsProperty(prop: PropertyNode): void {
+    if (prop.value.type !== 'ArrayExpression') {
+      this.addError('Tools must be an array of tool names', prop.value.span);
+      return;
+    }
+
+    const arrayValue = prop.value as ArrayExpressionNode;
+
+    // Validate each tool reference
+    for (const element of arrayValue.elements) {
+      if (element.type !== 'StringLiteral') {
+        this.addError('Tool name must be a string', element.span);
+        continue;
+      }
+
+      const toolName = (element as StringLiteralNode).value;
+
+      // Note: We don't check if tool is imported because tools can be built-in
+      // Built-in tools: read, write, bash, edit, calculate, get_current_time, random_number, string_operations
+    }
+
+    // Warn on empty tools array
+    if (arrayValue.elements.length === 0) {
+      this.addWarning('Tools array is empty', prop.value.span);
     }
   }
 
@@ -1709,12 +1768,15 @@ export class Validator {
    * Validate prompt property
    */
   private validatePromptProperty(prop: PropertyNode): void {
-    if (prop.value.type !== 'StringLiteral') {
-      this.addError('Prompt must be a string literal', prop.value.span);
+    if (prop.value.type !== 'StringLiteral' && prop.value.type !== 'InterpolatedString') {
+      this.addError('Prompt must be a string literal or interpolated string', prop.value.span);
       return;
     }
 
-    // Validate the string content
+    // Validate the string content (only for StringLiteral)
+    if (prop.value.type !== 'StringLiteral') {
+      return; // InterpolatedString is always valid
+    }
     const stringValue = prop.value as StringLiteralNode;
 
     // Warn on empty prompt
@@ -1731,7 +1793,35 @@ export class Validator {
   /**
    * Validate a session prompt string
    */
-  private validateSessionPrompt(prompt: StringLiteralNode): void {
+  private validateSessionPrompt(prompt: StringLiteralNode | InterpolatedStringNode): void {
+    // Handle InterpolatedString nodes
+    if (prompt.type === 'InterpolatedString') {
+      // Validate each part
+      for (const part of prompt.parts) {
+        if (part.type === 'StringLiteral') {
+          this.validateStringLiteral(part);
+        } else if (part.type === 'Identifier') {
+          // Check if variable is defined
+          if (!this.isVariableDefined(part.name)) {
+            this.addError(`Undefined variable in interpolation: "${part.name}"`, part.span);
+          }
+        }
+      }
+
+      // Warn if prompt is empty (no parts)
+      if (prompt.parts.length === 0) {
+        this.addError('Session prompt cannot be empty', prompt.span);
+      }
+      return;
+    }
+
+    // Handle regular StringLiteral nodes
+    // Safety check: ensure prompt has value
+    if (prompt.value === undefined || prompt.value === null) {
+      this.addError('Invalid session prompt: missing value', prompt.span);
+      return;
+    }
+
     // First, run general string validation
     this.validateStringLiteral(prompt);
 
@@ -1763,6 +1853,11 @@ export class Validator {
    * Validate interpolated variables in a string literal
    */
   private validateInterpolatedString(str: StringLiteralNode): void {
+    // Safety check: ensure string has value
+    if (str.value === undefined || str.value === null) {
+      return;
+    }
+
     const value = str.value;
 
     // Replace escaped braces {{ and }} with placeholders for validation
@@ -1792,6 +1887,12 @@ export class Validator {
    * Validate a string literal node
    */
   private validateStringLiteral(node: StringLiteralNode): void {
+    // Safety check: ensure node has value
+    if (node.value === undefined || node.value === null) {
+      this.addError('Invalid string literal: missing value', node.span);
+      return;
+    }
+
     // Check for invalid escape sequences
     if (node.escapeSequences) {
       for (const escape of node.escapeSequences) {

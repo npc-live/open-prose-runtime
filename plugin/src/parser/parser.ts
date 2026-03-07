@@ -202,6 +202,11 @@ export class Parser {
       return this.parseThrowStatement();
     }
 
+    // Handle return statement
+    if (this.check(TokenType.RETURN)) {
+      return this.parseReturnStatement();
+    }
+
     // Handle choice block (Tier 12)
     if (this.check(TokenType.CHOICE)) {
       return this.parseChoiceBlock();
@@ -343,7 +348,7 @@ export class Parser {
     const start = importToken.span.start;
 
     // Expect string literal (skill name)
-    let skillName: StringLiteralNode;
+    let skillName: StringLiteralNode | InterpolatedStringNode;
     if (this.check(TokenType.STRING)) {
       const stringToken = this.advance();
       skillName = this.createStringLiteralNode(stringToken);
@@ -364,7 +369,7 @@ export class Parser {
     }
 
     // Expect string literal (source)
-    let source: StringLiteralNode;
+    let source: StringLiteralNode | InterpolatedStringNode;
     if (this.check(TokenType.STRING)) {
       const stringToken = this.advance();
       source = this.createStringLiteralNode(stringToken);
@@ -676,12 +681,13 @@ export class Parser {
   private parseProperty(): PropertyNode | null {
     const start = this.peek().span.start;
 
-    // Property name can be model, prompt, skills, permissions, context, retry, backoff, or any identifier
+    // Property name can be model, prompt, skills, tools, permissions, context, retry, backoff, or any identifier
     let propName: IdentifierNode;
     if (this.check(TokenType.MODEL) || this.check(TokenType.PROMPT) ||
-        this.check(TokenType.SKILLS) || this.check(TokenType.PERMISSIONS) ||
-        this.check(TokenType.CONTEXT) || this.check(TokenType.RETRY) ||
-        this.check(TokenType.BACKOFF) || this.check(TokenType.IDENTIFIER)) {
+        this.check(TokenType.SKILLS) || this.check(TokenType.TOOLS) ||
+        this.check(TokenType.PERMISSIONS) || this.check(TokenType.CONTEXT) ||
+        this.check(TokenType.RETRY) || this.check(TokenType.BACKOFF) ||
+        this.check(TokenType.IDENTIFIER)) {
       propName = this.parsePropertyName();
     } else {
       // Skip unknown tokens
@@ -993,7 +999,7 @@ export class Parser {
     const sessionToken = this.advance();
     const start = sessionToken.span.start;
 
-    let prompt: StringLiteralNode | null = null;
+    let prompt: StringLiteralNode | InterpolatedStringNode | null = null;
     let agent: IdentifierNode | null = null;
     let name: IdentifierNode | null = null;
     let properties: PropertyNode[] = [];
@@ -1440,9 +1446,9 @@ export class Parser {
     const start = parallelToken.span.start;
 
     // Parse optional modifiers in parentheses
-    let joinStrategy: StringLiteralNode | null = null;
+    let joinStrategy: StringLiteralNode | InterpolatedStringNode | null = null;
     let anyCount: NumberLiteralNode | null = null;
-    let onFail: StringLiteralNode | null = null;
+    let onFail: StringLiteralNode | InterpolatedStringNode | null = null;
 
     if (this.check(TokenType.LPAREN)) {
       this.advance(); // consume '('
@@ -2277,7 +2283,7 @@ export class Parser {
     const start = throwToken.span.start;
 
     // Check for optional string message
-    let message: StringLiteralNode | null = null;
+    let message: StringLiteralNode | InterpolatedStringNode | null = null;
 
     if (this.check(TokenType.STRING)) {
       const stringToken = this.advance();
@@ -2289,6 +2295,33 @@ export class Parser {
     return {
       type: 'ThrowStatement',
       message,
+      span: { start, end },
+    };
+  }
+
+  /**
+   * Parse a return statement
+   * Syntax:
+   *   return              # Return null/undefined
+   *   return expression   # Return a value
+   */
+  private parseReturnStatement(): ReturnStatementNode {
+    const returnToken = this.advance(); // consume 'return'
+    const start = returnToken.span.start;
+
+    // Check for optional return value
+    let value: ExpressionNode | null = null;
+
+    // If there's an expression on the same line, parse it
+    if (!this.check(TokenType.NEWLINE) && !this.check(TokenType.EOF) && !this.check(TokenType.COMMENT)) {
+      value = this.parseBindingExpression();
+    }
+
+    const end = this.previous().span.end;
+
+    return {
+      type: 'ReturnStatement',
+      value,
       span: { start, end },
     };
   }
@@ -2397,7 +2430,7 @@ export class Parser {
     const start = optionToken.span.start;
 
     // Expect string literal (label)
-    let label: StringLiteralNode;
+    let label: StringLiteralNode | InterpolatedStringNode;
     if (this.check(TokenType.STRING)) {
       const stringToken = this.advance();
       label = this.createStringLiteralNode(stringToken);
@@ -3053,9 +3086,65 @@ export class Parser {
   /**
    * Create a StringLiteralNode from a string token
    */
-  private createStringLiteralNode(token: Token): StringLiteralNode {
+  private createStringLiteralNode(token: Token): StringLiteralNode | InterpolatedStringNode {
     const metadata = token.stringMetadata;
 
+    // Check if there are interpolations
+    if (metadata?.interpolations && metadata.interpolations.length > 0) {
+      // Create an InterpolatedString node
+      const parts: (StringLiteralNode | IdentifierNode)[] = [];
+      const interpolations = metadata.interpolations;
+      let currentOffset = 0;
+
+      // Split the string into parts: literal strings and interpolated identifiers
+      for (let i = 0; i < interpolations.length; i++) {
+        const interp = interpolations[i];
+
+        // Add string literal part before this interpolation
+        if (interp.offset > currentOffset) {
+          const literalText = token.value.substring(currentOffset, interp.offset);
+          parts.push({
+            type: 'StringLiteral',
+            value: literalText,
+            raw: `"${literalText}"`,
+            isTripleQuoted: false,
+            span: token.span, // Use the same span for simplicity
+          });
+        }
+
+        // Add identifier part
+        parts.push({
+          type: 'Identifier',
+          name: interp.varName,
+          span: token.span, // Use the same span for simplicity
+        });
+
+        // Move offset past this interpolation
+        currentOffset = interp.offset + interp.raw.length;
+      }
+
+      // Add any remaining literal text after the last interpolation
+      if (currentOffset < token.value.length) {
+        const literalText = token.value.substring(currentOffset);
+        parts.push({
+          type: 'StringLiteral',
+          value: literalText,
+          raw: `"${literalText}"`,
+          isTripleQuoted: false,
+          span: token.span,
+        });
+      }
+
+      return {
+        type: 'InterpolatedString',
+        parts,
+        raw: metadata.raw || `"${token.value}"`,
+        isTripleQuoted: metadata.isTripleQuoted ?? false,
+        span: token.span,
+      };
+    }
+
+    // No interpolations - return a regular StringLiteral
     // Convert token escape sequences to AST escape sequences if available
     const escapeSequences: EscapeSequence[] = metadata?.escapeSequences?.map(esc => ({
       type: esc.type,
