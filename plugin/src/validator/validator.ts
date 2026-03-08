@@ -1833,7 +1833,7 @@ export class Validator {
 
       // Warn if prompt is empty (no parts)
       if (prompt.parts.length === 0) {
-        this.addError('Session prompt cannot be empty', prompt.span);
+        this.addWarning('Session has empty prompt', prompt.span);
       }
       return;
     }
@@ -1851,10 +1851,9 @@ export class Validator {
     // Validate interpolations
     this.validateInterpolatedString(prompt);
 
-    // Error on empty prompt
-    if (prompt.value.length === 0) {
-      this.addError('Session prompt cannot be empty', prompt.span);
-      return;
+    // Warn on empty prompt
+    if (prompt.value !== undefined && prompt.value.length === 0) {
+      this.addWarning('Session has empty prompt', prompt.span);
     }
 
     // Warn on very long prompts (over 10,000 characters)
