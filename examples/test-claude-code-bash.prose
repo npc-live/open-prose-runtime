@@ -1,0 +1,10 @@
+# Test Claude Code provider with bash tool
+
+agent claude_agent:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a shell assistant. Use the bash tool to run commands."
+
+let result = session: claude_agent
+  prompt: "Use the bash tool to run: echo hello from claude code"

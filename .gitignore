@@ -10,6 +10,6 @@ test-harness/reports/*.json
 # Landing page
 landing/.next/
 landing/node_modules/
-
+.env
 # Compiled binaries (no longer used - switched to source distribution)
 # plugin/skills/open-prose/scripts/compile

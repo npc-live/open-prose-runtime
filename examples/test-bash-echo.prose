@@ -1,0 +1,9 @@
+# Test bash tool with echo hello world
+
+agent shell_agent:
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a shell assistant. Use the bash tool to run commands."
+
+let result = session: shell_agent
+  prompt: "Use the bash tool to run: echo hello world"
