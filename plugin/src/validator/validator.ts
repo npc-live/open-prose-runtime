@@ -431,12 +431,8 @@ export class Validator {
     }
 
     // Check for required properties
-    if (!seenProps.has('model')) {
-      this.addError('Agent definition requires "model" property', agent.span);
-    }
-    if (!seenProps.has('prompt')) {
-      this.addError('Agent definition requires "prompt" property', agent.span);
-    }
+    // Note: model and prompt are optional - will use defaults if not specified
+    // Skills and tools are also optional
   }
 
   /**
