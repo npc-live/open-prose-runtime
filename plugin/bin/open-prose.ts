@@ -33,12 +33,14 @@ Usage:
   open-prose compile <file.prose>   Compile and validate a program
   open-prose validate <file.prose>  Validate syntax only
   open-prose run <file.prose>       Execute a program
+  open-prose version                Show version number
   open-prose help                   Show this help message
 
 Examples:
   open-prose compile program.prose
   open-prose validate examples/research.prose
   open-prose run examples/hello-world.prose
+  open-prose --version
 `);
 }
 
@@ -320,6 +322,12 @@ switch (command) {
   case '--help':
   case '-h':
     printUsage();
+    break;
+
+  case 'version':
+  case '--version':
+  case '-v':
+    console.log(`OpenProse CLI v${VERSION}`);
     break;
 
   case undefined:
