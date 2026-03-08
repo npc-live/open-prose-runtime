@@ -41,6 +41,7 @@ import {
   ForEachBlockNode,
   TryBlockNode,
   ThrowStatementNode,
+  ReturnStatementNode,
   PipeExpressionNode,
   PipeOperationNode,
   InterpolatedStringNode,
@@ -2967,7 +2968,7 @@ export class Parser {
   /**
    * Parse a string literal
    */
-  private parseStringLiteral(): StringLiteralNode {
+  private parseStringLiteral(): StringLiteralNode | InterpolatedStringNode {
     const token = this.advance();
     return this.createStringLiteralNode(token);
   }

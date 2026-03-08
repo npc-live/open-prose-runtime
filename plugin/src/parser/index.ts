@@ -88,7 +88,16 @@ export {
   createCommentNode,
   createProgramNode,
   walkAST,
+  isStringLiteral,
 } from './ast';
+
+// AST utilities
+export {
+  isInterpolatedString,
+  getStringValue,
+  getRawString,
+  isTripleQuoted,
+} from './ast-utils';
 
 // Parser types
 export type {

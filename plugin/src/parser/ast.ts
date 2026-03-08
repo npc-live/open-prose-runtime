@@ -55,6 +55,13 @@ export interface StringLiteralNode extends ASTNode {
 }
 
 /**
+ * Type guard to check if a node is a StringLiteralNode
+ */
+export function isStringLiteral(node: ASTNode): node is StringLiteralNode {
+  return node.type === 'StringLiteral';
+}
+
+/**
  * A number literal
  */
 export interface NumberLiteralNode extends ASTNode {

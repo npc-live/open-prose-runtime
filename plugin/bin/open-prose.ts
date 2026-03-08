@@ -230,13 +230,13 @@ async function runFile(filePath: string): Promise<void> {
         console.log('Variables:');
         for (const [name, value] of result.outputs) {
           // Check if value has tool calls (SessionResult)
-          if (typeof value === 'object' && value !== null && 'metadata' in value && 'toolCalls' in value.metadata && value.metadata.toolCalls) {
+          if (typeof value === 'object' && value !== null && 'metadata' in value && (value as any).metadata && 'toolCalls' in (value as any).metadata && (value as any).metadata.toolCalls) {
             // Display output separately from metadata
-            console.log(`  ${name} = ${JSON.stringify(value.output, null, 2)}`);
+            console.log(`  ${name} = ${JSON.stringify((value as any).output, null, 2)}`);
 
             // Display tool calls in a formatted way
             console.log(`\n  🛠️  Tool Calls for ${name}:`);
-            for (const tc of value.metadata.toolCalls) {
+            for (const tc of (value as any).metadata.toolCalls) {
               const argsStr = JSON.stringify(tc.arguments);
               const resultStr = typeof tc.result === 'object'
                 ? JSON.stringify(tc.result)
