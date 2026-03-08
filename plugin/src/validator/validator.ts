@@ -1477,6 +1477,13 @@ export class Validator {
       case 'model':
         this.validateModelProperty(prop);
         break;
+      case 'provider':
+        if (context !== 'agent') {
+          this.addWarning('Provider property is only valid in agent definitions', prop.name.span);
+        } else {
+          this.validateProviderProperty(prop);
+        }
+        break;
       case 'prompt':
         this.validatePromptProperty(prop);
         break;
@@ -1587,6 +1594,26 @@ export class Validator {
     // Warn on empty tools array
     if (arrayValue.elements.length === 0) {
       this.addWarning('Tools array is empty', prop.value.span);
+    }
+  }
+
+  /**
+   * Validate provider property
+   */
+  private validateProviderProperty(prop: PropertyNode): void {
+    if (prop.value.type !== 'StringLiteral') {
+      this.addError('Provider must be a string literal', prop.value.span);
+      return;
+    }
+
+    const providerValue = (prop.value as StringLiteralNode).value;
+    const validProviders = ['openrouter', 'claude-code'];
+
+    if (!validProviders.includes(providerValue)) {
+      this.addError(
+        `Invalid provider: "${providerValue}". Valid providers: ${validProviders.join(', ')}`,
+        prop.value.span
+      );
     }
   }
 

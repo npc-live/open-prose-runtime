@@ -51,6 +51,7 @@ import {
   EnrichedExecutionContext,
 } from './types';
 import { OpenRouterClient } from './openrouter';
+import { ClaudeCodeProvider } from './claude-code-provider';
 import { ToolDefinition, ToolRegistry } from './tools';
 
 /**
@@ -70,6 +71,7 @@ class ReturnSignal extends Error {
 export class Interpreter {
   private env: RuntimeEnvironment;
   private openRouterClient: OpenRouterClient | null;
+  private claudeCodeProvider: ClaudeCodeProvider | null;
   private toolRegistry: ToolRegistry | null;
   private blocks: Map<string, BlockDefinitionNode> = new Map();
 
@@ -87,9 +89,15 @@ export class Interpreter {
     previousResults: any[];
   } | null = null;
 
-  constructor(env: RuntimeEnvironment, openRouterClient?: OpenRouterClient | null, toolRegistry?: ToolRegistry | null) {
+  constructor(
+    env: RuntimeEnvironment,
+    openRouterClient?: OpenRouterClient | null,
+    toolRegistry?: ToolRegistry | null,
+    claudeCodeProvider?: ClaudeCodeProvider | null
+  ) {
     this.env = env;
     this.openRouterClient = openRouterClient || null;
+    this.claudeCodeProvider = claudeCodeProvider || new ClaudeCodeProvider();
     this.toolRegistry = toolRegistry || null;
   }
 
@@ -608,13 +616,18 @@ export class Interpreter {
     }
 
     // Build agent instance
+    const model = (properties.get('model') as string) || this.env.config.defaultModel;
+    const provider = (properties.get('provider') as string) || 'openrouter';
+
     const agentInstance: AgentInstance = {
       name: agent.name.name,
-      model: (properties.get('model') as string) || this.env.config.defaultModel,
+      model: (model === 'opus' || model === 'sonnet' || model === 'haiku') ? model : this.env.config.defaultModel,
+      provider: (provider === 'openrouter' || provider === 'claude-code') ? provider : 'openrouter',
       skills: (properties.get('skills') as string[]) || [],
       tools: (properties.get('tools') as string[]) || [],
       permissions: (properties.get('permissions') as any) || {},
       defaultPrompt: properties.get('prompt') as string | undefined,
+      prompt: properties.get('prompt') as string | undefined,
     };
 
     // Register the agent
@@ -890,9 +903,39 @@ export class Interpreter {
       }
     }
 
-    // Use OpenRouter if available, otherwise fall back to mock
+    // Determine which provider to use
+    const provider = spec.agent?.provider || 'openrouter';
+
+    // Try Claude Code provider if specified
+    if (provider === 'claude-code' && this.claudeCodeProvider) {
+      try {
+        this.env.log('info', `Using Claude Code provider`);
+        const result = await this.claudeCodeProvider.executeSession(
+          spec,
+          this.env.config,
+          enableTools,
+          allowedTools,
+          skillPrompts
+        );
+
+        if (result.metadata.toolCalls && result.metadata.toolCalls.length > 0) {
+          this.env.log('info', `Session completed with ${result.metadata.toolCalls.length} tool call(s)`);
+        } else {
+          this.env.log('debug', `Session completed with Claude Code`);
+        }
+
+        return result;
+      } catch (error) {
+        this.env.log('error', `Claude Code failed: ${error}`);
+        this.env.log('warn', 'Falling back to OpenRouter or mock session');
+        // Fall through to OpenRouter or mock
+      }
+    }
+
+    // Use OpenRouter if available
     if (this.openRouterClient) {
       try {
+        this.env.log('info', `Using OpenRouter provider`);
         const result = await this.openRouterClient.executeSession(
           spec,
           this.env.config,
@@ -914,7 +957,7 @@ export class Interpreter {
         // Fall through to mock
       }
     } else {
-      this.env.log('warn', 'OpenRouter not configured, using mock session');
+      this.env.log('warn', 'No AI provider configured, using mock session');
     }
 
     // Mock implementation as fallback

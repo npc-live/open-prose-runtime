@@ -143,10 +143,12 @@ export type ControlFlow =
 export interface AgentInstance {
   name: string;
   model: 'opus' | 'sonnet' | 'haiku';
+  provider?: 'openrouter' | 'claude-code';  // AI provider to use
   skills: string[];    // 引导性技能：补充提示词的规范/知识
   tools: string[];     // 可执行工具：function 输入输出明确
   permissions: PermissionRules;
   defaultPrompt?: string;
+  prompt?: string;  // Agent-specific system prompt
 }
 
 /**
