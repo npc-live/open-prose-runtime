@@ -321,7 +321,10 @@ When the user asks you to analyze code, review files, or work with the file syst
     } catch (error) {
       const classification = this.classifyError(error);
 
-      console.error(`[OpenRouter] ${classification.type} error:`, classification.message);
+      // Only log errors if not in test mode
+      if (process.env.NODE_ENV !== 'test' && !process.env.BUN_TEST) {
+        console.error(`[OpenRouter] ${classification.type} error:`, classification.message);
+      }
 
       // For specific error types, provide helpful information
       switch (classification.type) {

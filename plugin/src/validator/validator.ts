@@ -682,10 +682,10 @@ export class Validator {
         );
       }
 
-      // Validate branch count for strategies
+      // Warn if branch count is low for strategies
       if ((strategy === 'first' || strategy === 'any') && parallel.body.length < 2) {
-        this.addError(
-          `Parallel with "${strategy}" strategy needs at least 2 branches`,
+        this.addWarning(
+          `Parallel with "${strategy}" strategy is most useful with at least 2 branches`,
           parallel.span
         );
       }
@@ -760,8 +760,12 @@ export class Validator {
       } else if (stmt.type === 'Assignment') {
         const assignment = stmt as AssignmentNode;
         const name = assignment.name.name;
-        // For assignments, only register if not already defined
-        if (!this.isVariableDefined(name)) {
+        // For assignments, check if already defined in outer scope
+        if (this.isVariableDefined(name)) {
+          // Error: trying to redefine an existing variable in parallel block
+          this.addError(`Duplicate variable definition: "${name}"`, assignment.name.span);
+        } else {
+          // Register as new variable
           this.defineVariable(name, {
             name,
             isConst: false,
