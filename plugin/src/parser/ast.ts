@@ -302,6 +302,8 @@ export interface InterpolatedStringNode extends ASTNode {
   parts: (StringLiteralNode | IdentifierNode)[];  // Alternating text and variables
   raw: string;  // The original raw string
   isTripleQuoted: boolean;
+  value?: string;  // Optional for compatibility with StringLiteralNode union types
+  escapeSequences?: EscapeSequence[];  // Optional for compatibility with StringLiteralNode union types
 }
 
 /**
