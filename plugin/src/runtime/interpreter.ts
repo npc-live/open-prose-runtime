@@ -488,13 +488,15 @@ export class Interpreter {
       if (descMatch) description = descMatch[1].trim();
     }
 
-    // Return as a "skill" type (knowledge-based, not executable)
+    // Return as a ToolDefinition with parameters
     return {
       name,
-      description,
-      type: 'skill', // This is a knowledge/guidance skill, not an executable tool
-      content: markdown, // Store the full markdown content
-      execute: async () => {
+      description: `${description}\n\n${markdown}`,
+      parameters: {
+        type: 'object',
+        properties: {},
+      },
+      handler: async () => {
         throw new Error('Skills are not executable - they provide guidance to the AI');
       },
     };
@@ -892,13 +894,18 @@ export class Interpreter {
       this.env.log('info', `Agent has ${spec.agent.skills.length} skill(s) for prompt guidance: [${spec.agent.skills.join(', ')}]`);
 
       // Load skill content from tool registry
-      for (const skillName of spec.agent.skills) {
-        const skillDef = this.toolRegistry.get(skillName);
-        if (skillDef && skillDef.type === 'skill' && skillDef.content) {
-          skillPrompts.push(skillDef.content);
-          this.env.log('info', `Loaded skill content for: ${skillName}`);
-        } else {
-          this.env.log('warn', `Skill not found or not loaded: ${skillName}`);
+      if (this.toolRegistry) {
+        for (const skillName of spec.agent.skills) {
+          const skillDef = this.toolRegistry.get(skillName);
+          // For now, skills are treated as regular tools
+          // In the future, we might want to distinguish between executable tools and guidance skills
+          if (skillDef) {
+            // If the tool has a description, use it as guidance
+            skillPrompts.push(`Skill: ${skillName}\n${skillDef.description}`);
+            this.env.log('info', `Loaded skill guidance for: ${skillName}`);
+          } else {
+            this.env.log('warn', `Skill not found: ${skillName}`);
+          }
         }
       }
     }
