@@ -10,6 +10,27 @@ import {
   AgentInstance,
 } from './types';
 
+const RESET  = '\x1b[0m';
+const DIM    = '\x1b[2m';
+const CYAN   = '\x1b[36m';
+const YELLOW = '\x1b[33m';
+const RED    = '\x1b[31m';
+const BOLD   = '\x1b[1m';
+
+const LOG_COLORS: Record<string, string> = {
+  debug: DIM,
+  info:  CYAN,
+  warn:  YELLOW,
+  error: `${BOLD}${RED}`,
+};
+
+const LOG_LABELS: Record<string, string> = {
+  debug: 'DEBUG',
+  info:  ' INFO',
+  warn:  ' WARN',
+  error: 'ERROR',
+};
+
 /**
  * Runtime Environment
  */
@@ -145,22 +166,18 @@ export class RuntimeEnvironment {
     }
 
     const timestamp = new Date().toISOString();
-    const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
+    const color = LOG_COLORS[level];
+    const label = LOG_LABELS[level];
+    const ts = `${DIM}${timestamp}${RESET}`;
+    const lv = `${color}[${label}]${RESET}`;
+    const msg = level === 'error' ? `${RED}${message}${RESET}`
+              : level === 'warn'  ? `${YELLOW}${message}${RESET}`
+              : message;
 
-    switch (level) {
-      case 'debug':
-        console.debug(`${prefix} ${message}`);
-        break;
-      case 'info':
-        console.info(`${prefix} ${message}`);
-        break;
-      case 'warn':
-        console.warn(`${prefix} ${message}`);
-        break;
-      case 'error':
-        console.error(`${prefix} ${message}`);
-        break;
-    }
+    const line = `${ts} ${lv} ${msg}`;
+
+    // All runtime logs go to stderr so they don't pollute stdout/results
+    process.stderr.write(line + '\n');
   }
 
   /**

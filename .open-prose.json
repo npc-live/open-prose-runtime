@@ -1,0 +1,10 @@
+{
+  "providers": {
+    "opencode": {
+      "bin": "opencode",
+      "args": ["run"],
+      "promptMode": "arg",
+      "timeout": 120000
+    }
+  }
+}

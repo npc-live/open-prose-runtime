@@ -80,6 +80,7 @@ export type {
   PipeExpressionNode,
   PipeOperationNode,
   ArrowExpressionNode,
+  AskStatementNode,
   ASTVisitor,
 } from './ast';
 

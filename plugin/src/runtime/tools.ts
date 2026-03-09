@@ -529,9 +529,19 @@ export class ToolRegistry {
 
     const startTime = Date.now();
 
+    // ANSI colors for tool logs
+    const RESET   = '\x1b[0m';
+    const BOLD    = '\x1b[1m';
+    const MAGENTA = '\x1b[35m';
+    const GREEN   = '\x1b[32m';
+    const RED     = '\x1b[31m';
+    const DIM     = '\x1b[2m';
+    const YELLOW  = '\x1b[33m';
+
     // Log execution start
     if (this.loggingEnabled) {
-      console.log(`[Tool] 🔧 Calling ${name}`, args);
+      const argsStr = JSON.stringify(args);
+      process.stderr.write(`${BOLD}${MAGENTA}[TOOL]${RESET} ${YELLOW}⚙ ${name}${RESET} ${DIM}${argsStr}${RESET}\n`);
     }
 
     try {
@@ -551,7 +561,8 @@ export class ToolRegistry {
 
       // Log execution success
       if (this.loggingEnabled) {
-        console.log(`[Tool] ✓ ${name} returned in ${duration}ms`, result);
+        const resultStr = typeof result === 'object' ? JSON.stringify(result) : String(result);
+        process.stderr.write(`${BOLD}${MAGENTA}[TOOL]${RESET} ${GREEN}✓ ${name}${RESET} ${DIM}(${duration}ms)${RESET} → ${resultStr}\n`);
       }
 
       // Notify listeners
@@ -581,7 +592,7 @@ export class ToolRegistry {
 
       // Log execution failure
       if (this.loggingEnabled) {
-        console.error(`[Tool] ✗ ${name} failed in ${duration}ms`, error);
+        process.stderr.write(`${BOLD}${MAGENTA}[TOOL]${RESET} ${RED}✗ ${name} failed in ${duration}ms${RESET} ${error}\n`);
       }
 
       // Notify listeners

@@ -1,0 +1,55 @@
+# Test: multi-session context passing (Option A)
+#
+# Chain: step1 → step2 (uses step1) → step3 (uses step1 + step2)
+# Each session is a fresh Claude process; context is injected via prompt.
+
+agent shell:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a shell assistant. Be concise. Output only what is asked."
+
+# ── Step 1: gather facts ──────────────────────────────────────────
+# Claude runs bash to collect system info. We don't know the values ahead of time.
+let facts = session: shell
+  prompt: """
+  Use bash to collect the following and output ONLY a plain list, one item per line:
+  1. Current working directory (pwd)
+  2. Current user (whoami)
+  3. Today's date (date +%Y-%m-%d)
+  """
+
+# ── Step 2: act on step1's output ────────────────────────────────
+# Claude receives step1's output as context and uses it to create a file.
+# If context passing works, it will use the ACTUAL values from step1.
+let created = session: shell
+  prompt: """
+  The previous step gathered this information:
+
+  {facts}
+
+  Using bash, create a file at /tmp/prose-context-test.txt containing exactly:
+  - The working directory from above
+  - The username from above
+  - The date from above
+
+  Then output: "Created /tmp/prose-context-test.txt"
+  """
+
+# ── Step 3: verify the chain ─────────────────────────────────────
+# Claude checks that the file matches what step1 reported.
+# Verifies both step1 and step2 context are accessible.
+let verified = session: shell
+  prompt: """
+  Step 1 reported these facts:
+  {facts}
+
+  Step 2 said:
+  {created}
+
+  Now use bash to:
+  1. cat /tmp/prose-context-test.txt
+  2. Verify each line matches what step 1 reported
+
+  Output: PASS or FAIL with a one-line reason.
+  """

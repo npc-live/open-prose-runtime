@@ -50,6 +50,7 @@ export enum TokenType {
   TOOLS = 'TOOLS',
   PERMISSIONS = 'PERMISSIONS',
   CONTEXT = 'CONTEXT',
+  ASK = 'ASK',
 
   // Operators
   ARROW = 'ARROW',          // ->
@@ -177,6 +178,7 @@ export const KEYWORDS: Record<string, TokenType> = {
   'tools': TokenType.TOOLS,
   'permissions': TokenType.PERMISSIONS,
   'context': TokenType.CONTEXT,
+  'ask': TokenType.ASK,
 };
 
 /**

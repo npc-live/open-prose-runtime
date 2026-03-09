@@ -5,15 +5,19 @@
   "type": "commonjs",
   "main": "src/index.ts",
   "bin": {
-    "open-prose": "bin/open-prose.ts"
+    "open-prose": "bin/open-prose"
   },
+  "files": [
+    "bin/open-prose"
+  ],
   "scripts": {
     "compile": "bun run bin/open-prose.ts compile",
     "validate": "bun run bin/open-prose.ts validate",
-    "build": "tsc",
+    "build": "bun build --compile bin/open-prose.ts --outfile bin/open-prose",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "bun run build"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",

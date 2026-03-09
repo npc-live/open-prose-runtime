@@ -1,10 +1,20 @@
-# Test Claude Code provider with bash tool
+# Test multi-step bash tool use with Claude Code
 
-agent claude_agent:
+agent shell:
   provider: "claude-code"
   model: sonnet
   tools: ["bash"]
-  prompt: "You are a shell assistant. Use the bash tool to run commands."
+  prompt: "You are a shell assistant. Use the bash tool to complete tasks step by step."
 
-let result = session: claude_agent
-  prompt: "Use the bash tool to run: echo hello from claude code"
+ask folder_name: "请输入文件夹名字"
+
+# 多步任务：Claude 自己决定用几次 bash
+let result = session: shell
+  prompt: """
+  Complete these steps using bash tools:
+  1. Create a directory called {folder_name}
+  2. Create 3 files inside it: hello.txt, world.txt, readme.txt with some content
+  3. List the directory contents
+  4. Count the total number of lines across all files
+  Report what you did at each step.
+  """

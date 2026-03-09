@@ -1,0 +1,8 @@
+# Test opencode provider
+
+agent code_agent:
+  model: sonnet
+  provider: "opencode"
+
+let result = session: code_agent
+  prompt: "Say hello and tell me what 2 + 2 equals."

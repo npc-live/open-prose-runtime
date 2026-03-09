@@ -36,6 +36,7 @@ import {
   ArrowExpressionNode,
   ChoiceBlockNode,
   ChoiceOptionNode,
+  AskStatementNode,
 } from '../parser';
 import { RuntimeEnvironment } from './environment';
 import {
@@ -50,8 +51,7 @@ import {
   ExecutionEvent,
   EnrichedExecutionContext,
 } from './types';
-import { OpenRouterClient } from './openrouter';
-import { ClaudeCodeProvider } from './claude-code-provider';
+import { CliProvider, createCliProvider } from './cli-provider';
 import { ToolDefinition, ToolRegistry } from './tools';
 
 /**
@@ -70,10 +70,11 @@ class ReturnSignal extends Error {
  */
 export class Interpreter {
   private env: RuntimeEnvironment;
-  private openRouterClient: OpenRouterClient | null;
-  private claudeCodeProvider: ClaudeCodeProvider | null;
   private toolRegistry: ToolRegistry | null;
   private blocks: Map<string, BlockDefinitionNode> = new Map();
+
+  // Cache of CLI providers keyed by provider string
+  private cliProviderCache: Map<string, CliProvider> = new Map();
 
   // Context enrichment tracking
   private executionEvents: ExecutionEvent[] = [];
@@ -91,14 +92,20 @@ export class Interpreter {
 
   constructor(
     env: RuntimeEnvironment,
-    openRouterClient?: OpenRouterClient | null,
     toolRegistry?: ToolRegistry | null,
-    claudeCodeProvider?: ClaudeCodeProvider | null
   ) {
     this.env = env;
-    this.openRouterClient = openRouterClient || null;
-    this.claudeCodeProvider = claudeCodeProvider || new ClaudeCodeProvider();
     this.toolRegistry = toolRegistry || null;
+  }
+
+  /** Get or create a CliProvider for the given provider string */
+  private getCliProvider(provider: string): CliProvider | null {
+    if (!this.cliProviderCache.has(provider)) {
+      const p = createCliProvider(provider);
+      if (p) this.cliProviderCache.set(provider, p);
+      else return null;
+    }
+    return this.cliProviderCache.get(provider)!;
   }
 
   /**
@@ -216,6 +223,9 @@ export class Interpreter {
 
       case 'TryBlock':
         return await this.executeTryBlock(statement as TryBlockNode);
+
+      case 'AskStatement':
+        return await this.executeAskStatement(statement as AskStatementNode);
 
       case 'ThrowStatement':
         return await this.executeThrowStatement(statement as ThrowStatementNode);
@@ -619,12 +629,12 @@ export class Interpreter {
 
     // Build agent instance
     const model = (properties.get('model') as string) || this.env.config.defaultModel;
-    const provider = (properties.get('provider') as string) || 'openrouter';
+    const provider = (properties.get('provider') as string) || 'claude-code';
 
     const agentInstance: AgentInstance = {
       name: agent.name.name,
       model: (model === 'opus' || model === 'sonnet' || model === 'haiku') ? model : this.env.config.defaultModel,
-      provider: (provider === 'openrouter' || provider === 'claude-code') ? provider : 'openrouter',
+      provider,
       skills: (properties.get('skills') as string[]) || [],
       tools: (properties.get('tools') as string[]) || [],
       permissions: (properties.get('permissions') as any) || {},
@@ -910,61 +920,27 @@ export class Interpreter {
       }
     }
 
-    // Determine which provider to use
-    const provider = spec.agent?.provider || 'openrouter';
-
-    // Try Claude Code provider if specified
-    if (provider === 'claude-code' && this.claudeCodeProvider) {
+    // Determine which provider to use (default: 'claude-code' builtin preset)
+    const providerKey = spec.agent?.provider || 'claude-code';
+    const cliProvider = this.getCliProvider(providerKey);
+    if (cliProvider) {
       try {
-        this.env.log('info', `Using Claude Code provider`);
-        const result = await this.claudeCodeProvider.executeSession(
+        this.env.log('info', `Provider: ${cliProvider.providerName}`);
+        const result = await cliProvider.executeSession(
           spec,
           this.env.config,
           enableTools,
           allowedTools,
           skillPrompts
         );
-
-        if (result.metadata.toolCalls && result.metadata.toolCalls.length > 0) {
-          this.env.log('info', `Session completed with ${result.metadata.toolCalls.length} tool call(s)`);
-        } else {
-          this.env.log('debug', `Session completed with Claude Code`);
-        }
-
+        this.env.log('debug', `Session done via ${cliProvider.providerName}`);
         return result;
       } catch (error) {
-        this.env.log('error', `Claude Code failed: ${error}`);
-        this.env.log('warn', 'Falling back to OpenRouter or mock session');
-        // Fall through to OpenRouter or mock
-      }
-    }
-
-    // Use OpenRouter if available
-    if (this.openRouterClient) {
-      try {
-        this.env.log('info', `Using OpenRouter provider`);
-        const result = await this.openRouterClient.executeSession(
-          spec,
-          this.env.config,
-          enableTools,
-          allowedTools,
-          skillPrompts
-        );
-
-        if (result.metadata.toolCalls && result.metadata.toolCalls.length > 0) {
-          this.env.log('info', `Session completed with ${result.metadata.toolCalls.length} tool call(s)`);
-        } else {
-          this.env.log('debug', `Session completed with OpenRouter (${result.metadata.tokensUsed} tokens)`);
-        }
-
-        return result;
-      } catch (error) {
-        this.env.log('error', `OpenRouter failed: ${error}`);
+        this.env.log('error', `${providerKey} failed: ${error}`);
         this.env.log('warn', 'Falling back to mock session');
-        // Fall through to mock
       }
     } else {
-      this.env.log('warn', 'No AI provider configured, using mock session');
+      this.env.log('warn', `Unknown provider "${providerKey}", using mock session`);
     }
 
     // Mock implementation as fallback
@@ -1211,7 +1187,8 @@ Which option number is best? Respond with ONLY the number (1, 2, 3, etc.) and no
     // Use the default model to make the selection
     let selectedIndex = 0;
 
-    if (this.openRouterClient) {
+    const defaultProvider = this.getCliProvider('claude-code');
+    if (defaultProvider) {
       try {
         // Build a simple session spec for the choice selection
         const spec: SessionSpec = {
@@ -1220,7 +1197,7 @@ Which option number is best? Respond with ONLY the number (1, 2, 3, etc.) and no
           context: null,
         };
 
-        const response = await this.openRouterClient.executeSession(
+        const response = await defaultProvider.executeSession(
           spec,
           this.env.config,
           false, // No tools needed for simple selection
@@ -1242,7 +1219,7 @@ Which option number is best? Respond with ONLY the number (1, 2, 3, etc.) and no
         this.env.log('warn', `Failed to get AI selection, defaulting to first option: ${error}`);
       }
     } else {
-      this.env.log('warn', 'No OpenRouter client, defaulting to first option');
+      this.env.log('warn', 'No provider configured, defaulting to first option');
     }
 
     const selectedOption = block.options[selectedIndex];
@@ -1424,9 +1401,9 @@ Respond with ONLY "true" or "false" (one word, lowercase).`;
   private async evaluateCondition(condition: DiscretionNode): Promise<boolean> {
     this.env.trace(`Evaluating condition: ${condition.expression}`);
 
-    // If no OpenRouter client, can't evaluate conditions
-    if (!this.openRouterClient) {
-      this.env.log('warn', 'No OpenRouter client available, conditions always evaluate to true');
+    const conditionProvider = this.getCliProvider('claude-code');
+    if (!conditionProvider) {
+      this.env.log('warn', 'No provider available, conditions always evaluate to true');
       return true;
     }
 
@@ -1458,7 +1435,7 @@ Respond with ONLY "true" or "false" (one word, lowercase).`;
     // Record this as an event
     this.addExecutionEvent('condition', `Evaluating: ${condition.expression}`);
 
-    const result = await this.openRouterClient.executeSession(spec, this.env.config, false, []);
+    const result = await conditionProvider.executeSession(spec, this.env.config, false, []);
     const output = result.output.toLowerCase().trim();
 
     // Parse the AI response
@@ -1672,8 +1649,30 @@ Respond with ONLY "true" or "false" (one word, lowercase).`;
   }
 
   /**
-   * Execute a throw statement
+   * Execute an ask statement — prompt the user for input via stdin
+   * Syntax: ask <varname>: "question"
    */
+  private async executeAskStatement(statement: AskStatementNode): Promise<StatementResult> {
+    const varName = statement.variable.name;
+    const promptText = await this.evaluateExpression(statement.prompt) as string;
+
+    const CYAN = '\x1b[36m'; const BOLD = '\x1b[1m'; const RESET = '\x1b[0m'; const GREEN = '\x1b[32m';
+
+    const answer = await new Promise<string>((resolve) => {
+      process.stdout.write(`${BOLD}${CYAN}? ${promptText}${RESET} `);
+      process.stdin.resume();
+      process.stdin.setEncoding('utf-8');
+      process.stdin.once('data', (data: unknown) => {
+        process.stdin.pause();
+        resolve(String(data).trim());
+      });
+    });
+
+    this.env.log('info', `ask ${varName} = ${GREEN}"${answer}"${RESET}`);
+    this.env.contextManager.declareVariable(varName, answer, false, statement.span);
+    return { value: answer };
+  }
+
   private async executeThrowStatement(statement: ThrowStatementNode): Promise<StatementResult> {
     this.env.trace('Executing throw statement');
 

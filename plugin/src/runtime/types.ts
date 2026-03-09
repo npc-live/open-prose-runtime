@@ -131,6 +131,9 @@ export interface StatementResult {
 /**
  * Control flow directives
  */
+/** Built-in provider names */
+export const BUILTIN_PROVIDERS = ['claude-code', 'claude', 'opencode', 'aider'] as const;
+
 export type ControlFlow =
   | { type: 'break' }
   | { type: 'continue' }
@@ -143,7 +146,7 @@ export type ControlFlow =
 export interface AgentInstance {
   name: string;
   model: 'opus' | 'sonnet' | 'haiku';
-  provider?: 'openrouter' | 'claude-code';  // AI provider to use
+  provider?: string;  // AI provider: 'claude-code', 'claude', 'opencode', 'custom:bin [args]'
   skills: string[];    // 引导性技能：补充提示词的规范/知识
   tools: string[];     // 可执行工具：function 输入输出明确
   permissions: PermissionRules;

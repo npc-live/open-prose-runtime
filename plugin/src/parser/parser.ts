@@ -49,6 +49,7 @@ import {
   ChoiceOptionNode,
   IfStatementNode,
   ElseIfClauseNode,
+  AskStatementNode,
   createProgramNode,
   createCommentNode,
 } from './ast';
@@ -211,6 +212,11 @@ export class Parser {
     // Handle choice block (Tier 12)
     if (this.check(TokenType.CHOICE)) {
       return this.parseChoiceBlock();
+    }
+
+    // Handle ask statement
+    if (this.check(TokenType.ASK)) {
+      return this.parseAskStatement();
     }
 
     // Handle if/elif/else (Tier 12)
@@ -2279,6 +2285,44 @@ export class Parser {
    *   throw              # Rethrow current error
    *   throw "message"    # Throw with custom message
    */
+  /**
+   * Parse an ask statement
+   * Syntax: ask <varname>: "question"
+   */
+  private parseAskStatement(): AskStatementNode {
+    const askToken = this.advance(); // consume 'ask'
+    const start = askToken.span.start;
+
+    const variable = this.parseIdentifier();
+
+    // Expect colon
+    if (!this.check(TokenType.COLON)) {
+      this.addError('Expected ":" after variable name in ask statement');
+    } else {
+      this.advance(); // consume ':'
+    }
+
+    // Skip optional newlines/indents
+    while (this.check(TokenType.NEWLINE) || this.check(TokenType.INDENT)) {
+      this.advance();
+    }
+
+    if (!this.check(TokenType.STRING)) {
+      this.addError('Expected a string prompt in ask statement');
+    }
+    const stringToken = this.advance();
+    const prompt = this.createStringLiteralNode(stringToken);
+
+    const end = this.previous().span.end;
+
+    return {
+      type: 'AskStatement',
+      variable,
+      prompt,
+      span: { start, end },
+    };
+  }
+
   private parseThrowStatement(): ThrowStatementNode {
     const throwToken = this.advance(); // consume 'throw'
     const start = throwToken.span.start;

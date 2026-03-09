@@ -46,6 +46,7 @@ import {
   ASTVisitor,
 } from '../parser';
 import { SourceSpan } from '../parser/tokens';
+import { BUILTIN_PROVIDERS } from '../runtime/types';
 
 export interface ValidationError {
   message: string;
@@ -1607,11 +1608,11 @@ export class Validator {
     }
 
     const providerValue = (prop.value as StringLiteralNode).value;
-    const validProviders = ['openrouter', 'claude-code'];
 
-    if (!validProviders.includes(providerValue)) {
-      this.addError(
-        `Invalid provider: "${providerValue}". Valid providers: ${validProviders.join(', ')}`,
+    // Allow 'custom:...' prefix for arbitrary CLI tools
+    if (!(BUILTIN_PROVIDERS as readonly string[]).includes(providerValue) && !providerValue.startsWith('custom:')) {
+      this.addWarning(
+        `Unknown provider: "${providerValue}". Known providers: ${BUILTIN_PROVIDERS.join(', ')}. Use "custom:bin [args]" for other CLI tools.`,
         prop.value.span
       );
     }

@@ -109,7 +109,8 @@ export type StatementNode =
   | AssignmentNode
   | CommentStatementNode
   | ArrowExpressionNode
-  | PipeExpressionNode;
+  | PipeExpressionNode
+  | AskStatementNode;
 
 /**
  * A standalone comment as a statement
@@ -117,6 +118,16 @@ export type StatementNode =
 export interface CommentStatementNode extends ASTNode {
   type: 'CommentStatement';
   comment: CommentNode;
+}
+
+/**
+ * Ask statement — prompts the user for input at runtime
+ * Syntax: ask <varname>: "question"
+ */
+export interface AskStatementNode extends ASTNode {
+  type: 'AskStatement';
+  variable: IdentifierNode;
+  prompt: StringLiteralNode | InterpolatedStringNode;
 }
 
 /**
