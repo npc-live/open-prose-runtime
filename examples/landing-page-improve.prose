@@ -1,0 +1,73 @@
+# Landing page improvement workflow
+# Reads the current page, generates improved copy, then implements it.
+
+agent analyst:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash", "read"]
+  prompt: "You are a product analyst. Be concise and structured."
+
+agent copywriter:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash", "read"]
+  prompt: "You are a senior copywriter specializing in developer tools. Write clear, compelling copy that speaks to engineers."
+
+agent dev:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash", "read", "edit"]
+  prompt: "You are a frontend developer. Make minimal, targeted edits. Preserve all existing code structure."
+
+# ── Step 1: understand the current page ──────────────────────────
+let audit = session: analyst
+  prompt: """
+  Read the landing page at landing/src/app/page.tsx
+
+  For each major section (Hero, Concept, FAQ, GettingStarted, Support),
+  extract the current headline and key copy as-is.
+
+  Then identify 3 specific weaknesses:
+  - Is the value proposition clear in the first 5 seconds?
+  - Is the "Getting Started" section actionable enough?
+  - Are there any confusing or vague phrases?
+
+  Output as a structured list. No suggestions yet — just facts.
+  """
+
+# ── Step 2: generate new copy for the weak spots ─────────────────
+let new_copy = session: copywriter
+  prompt: """
+  Here is the current landing page audit:
+
+  {audit}
+
+  Also read the full language reference to understand what OpenProse actually does:
+  bash: head -100 plugin/skills/open-prose/SKILL.md
+
+  Now write improved copy for the 3 weakest areas identified above.
+  For each area, provide:
+  - CURRENT: (the existing text)
+  - IMPROVED: (your rewrite)
+  - REASON: (one sentence why it's better)
+
+  Keep the tone: technical, calm, no hype. Target audience: developers.
+  """
+
+# ── Step 3: implement the improvements ───────────────────────────
+let result = session: dev
+  prompt: """
+  Here are the approved copy improvements for the landing page:
+
+  {new_copy}
+
+  Edit landing/src/app/page.tsx to apply these changes.
+  Rules:
+  - Only change the text content identified in CURRENT → IMPROVED pairs
+  - Do not restructure components or change CSS
+  - Do not change anything not mentioned above
+  - After editing, run: bash: grep -n "IMPROVED_TEXT" landing/src/app/page.tsx
+    to confirm the changes landed (replace IMPROVED_TEXT with a distinctive phrase)
+
+  Report: which lines were changed and what the diff looks like.
+  """

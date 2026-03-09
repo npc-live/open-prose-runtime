@@ -11,6 +11,7 @@
     "bin/open-prose"
   ],
   "scripts": {
+    "run": "bun run bin/open-prose.ts run",
     "compile": "bun run bin/open-prose.ts compile",
     "validate": "bun run bin/open-prose.ts validate",
     "build": "bun build --compile bin/open-prose.ts --outfile bin/open-prose",

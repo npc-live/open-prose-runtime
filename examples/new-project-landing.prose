@@ -1,0 +1,100 @@
+# Generate a landing page for a new project from scratch
+
+agent strategist:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash"]
+  prompt: "You are a product strategist. Think in terms of user problems and clear value propositions."
+
+agent copywriter:
+  provider: "claude-code"
+  model: sonnet
+  prompt: "You are a senior copywriter for developer tools. Write punchy, honest copy. No buzzwords."
+
+agent developer:
+  provider: "claude-code"
+  model: sonnet
+  tools: ["bash", "write"]
+  prompt: "You are a frontend developer. Write clean, self-contained code. Prefer simplicity over cleverness."
+
+# ── Gather inputs ─────────────────────────────────────────────────
+ask project_name:    "Project name?"
+ask one_liner:       "What does it do? (one sentence)"
+ask target_audience: "Who is it for?"
+ask key_features:    "Top 3 features or benefits (comma-separated)"
+ask stack:           "Tech stack for the landing page? (e.g. html+tailwind / nextjs / vue)"
+ask output_dir:      "Output directory? (e.g. ./landing)"
+
+# ── Step 1: page strategy ─────────────────────────────────────────
+let strategy = session: strategist
+  prompt: """
+  New project details:
+  - Name: {project_name}
+  - What it does: {one_liner}
+  - Target audience: {target_audience}
+  - Key features: {key_features}
+
+  Design a landing page structure. Output ONLY:
+
+  HERO
+  headline: <8 words max, outcome-focused>
+  subheadline: <one sentence, who it's for and what they get>
+  cta: <button label>
+
+  PROBLEM
+  <2-3 sentences describing the pain this solves>
+
+  FEATURES
+  For each feature from "{key_features}", write:
+  - title: <3-5 words>
+  - description: <one sentence>
+
+  GETTING STARTED
+  <3 numbered steps to go from zero to first result>
+
+  FAQ
+  <3 likely questions with short answers>
+  """
+
+# ── Step 2: full copy ─────────────────────────────────────────────
+let copy = session: copywriter
+  prompt: """
+  Project: {project_name} — {one_liner}
+  Audience: {target_audience}
+
+  Here is the page strategy:
+  {strategy}
+
+  Expand this into final landing page copy.
+  - Hero headline and subheadline: punchy, concrete, no "revolutionary" or "powerful"
+  - Problem section: empathetic, specific
+  - Feature descriptions: benefit-first, one sentence each
+  - Getting started steps: exact commands or actions, not vague
+  - FAQ: realistic questions a skeptic would ask
+
+  Output as structured markdown with clear section labels.
+  """
+
+# ── Step 3: build the page ────────────────────────────────────────
+let result = session: developer
+  prompt: """
+  Build a complete landing page for {project_name}.
+
+  Stack: {stack}
+  Output to: {output_dir}
+
+  Copy to use:
+  {copy}
+
+  Requirements:
+  - Single page, all sections on one file
+  - Mobile responsive
+  - Dark/light neutral color scheme (no heavy branding)
+  - Smooth scroll between sections
+  - No external JS dependencies if using plain HTML
+  - If nextjs: single page.tsx with inline tailwind classes
+  - If html+tailwind: use CDN tailwind, single index.html
+
+  After writing the file(s), run a quick sanity check:
+  bash: wc -l {output_dir}/* 2>/dev/null || echo "files written"
+  """
