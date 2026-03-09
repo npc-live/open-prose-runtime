@@ -39,14 +39,14 @@ const BUILTIN_PRESETS: Record<string, CliConfig> = {
     name: 'claude-code',
     bin: 'claude',
     promptMode: 'stdin',
-    stdinArgs: ['--output-format', 'stream-json'],
+    stdinArgs: ['--output-format', 'stream-json', '--verbose'],
     outputFormat: 'stream-json',
   },
   claude: {
     name: 'claude',
     bin: 'claude',
     promptMode: 'stdin',
-    stdinArgs: ['--output-format', 'stream-json'],
+    stdinArgs: ['--output-format', 'stream-json', '--verbose'],
     outputFormat: 'stream-json',
   },
   opencode: {

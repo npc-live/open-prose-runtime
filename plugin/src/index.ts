@@ -113,6 +113,10 @@ export {
   getEncodedSemanticTokens,
 } from './lsp';
 
+// Runtime exports
+export { execute } from './runtime';
+export type { ExecutionResult, RuntimeConfig } from './runtime';
+
 /**
  * Version of the OpenProse toolkit
  */

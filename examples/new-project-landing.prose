@@ -15,7 +15,8 @@ agent developer:
   provider: "claude-code"
   model: sonnet
   tools: ["bash", "write"]
-  prompt: "You are a frontend developer. Write clean, self-contained code. Prefer simplicity over cleverness."
+  skills: ["frontend-design", "nextvariant"]
+  prompt: "You are a frontend developer. Write clean, self-contained code. Prefer simplicity over cleverness. Apply frontend-design and nextvariant skills for high-quality aesthetics."
 
 # ── Gather inputs ─────────────────────────────────────────────────
 ask project_name:    "Project name?"
@@ -24,6 +25,8 @@ ask target_audience: "Who is it for?"
 ask key_features:    "Top 3 features or benefits (comma-separated)"
 ask stack:           "Tech stack for the landing page? (e.g. html+tailwind / nextjs / vue)"
 ask output_dir:      "Output directory? (e.g. ./landing)"
+ask logo_path:       "Logo file path? (leave blank if none)"
+ask hero_image_path: "Hero image file path? (leave blank if none)"
 
 # ── Step 1: page strategy ─────────────────────────────────────────
 let strategy = session: strategist
@@ -83,18 +86,27 @@ let result = session: developer
   Stack: {stack}
   Output to: {output_dir}
 
+  Assets:
+  - Logo: {logo_path} (empty means no logo)
+  - Hero image: {hero_image_path} (empty means no hero image)
+
   Copy to use:
   {copy}
 
   Requirements:
   - Single page, all sections on one file
   - Mobile responsive
+  - Apply frontend-design skill: refined spacing, typography hierarchy, micro-interactions
+  - Apply nextvariant skill: use variant-driven component patterns for visual consistency
   - Dark/light neutral color scheme (no heavy branding)
   - Smooth scroll between sections
   - No external JS dependencies if using plain HTML
-  - If nextjs: single page.tsx with inline tailwind classes
+  - If nextjs: use Next.js 16 (latest), init with `pnpm create next-app@16 {output_dir} --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"`, then implement in src/app/page.tsx with inline tailwind classes; must pass `pnpm dev` without errors
   - If html+tailwind: use CDN tailwind, single index.html
+  - If logo_path is not empty, display the logo in the navbar/header using <img> or next/image
+  - If hero_image_path is not empty, use it as the hero section background or featured image
 
-  After writing the file(s), run a quick sanity check:
-  bash: wc -l {output_dir}/* 2>/dev/null || echo "files written"
+  After writing the file(s):
+  - If nextjs: run `cd {output_dir} && pnpm install && pnpm build` and confirm it succeeds
+  - Otherwise: run `wc -l {output_dir}/* 2>/dev/null || echo "files written"`
   """

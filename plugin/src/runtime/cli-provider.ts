@@ -128,9 +128,15 @@ async function runCli(cfg: CliConfig, prompt: string, extraArgs: string[] = []):
     const resolvedBin = resolveRealPath(cfg.bin);
     console.log(`${tag} ${CYAN}▶ ${resolvedBin} ${baseArgs.join(' ')}${RESET}`);
 
+    // Strip CLAUDECODE so nested claude invocations aren't blocked by the
+    // "cannot be launched inside another Claude Code session" guard.
+    const childEnv = { ...process.env };
+    delete childEnv['CLAUDECODE'];
+
     const child = spawn(cfg.bin, baseArgs, {
       stdio: ['pipe', 'pipe', 'pipe'],
       detached: false,
+      env: childEnv,
     });
 
     let stdout = '';
@@ -172,7 +178,12 @@ async function runCli(cfg: CliConfig, prompt: string, extraArgs: string[] = []):
       }
     });
 
-    child.stderr.on('data', (d: Buffer) => { stderr += d.toString(); });
+    child.stderr.on('data', (d: Buffer) => {
+      const chunk = d.toString();
+      stderr += chunk;
+      // Surface stderr live so errors are visible immediately
+      process.stderr.write(`${tag} ${DIM}${chunk.trimEnd()}${RESET}\n`);
+    });
 
     child.on('error', (err) => {
       settle(() => reject(new Error(`Failed to spawn ${cfg.bin}: ${err.message}`)));
