@@ -1,202 +1,193 @@
 ---
 name: open-prose
 description: |
-  OpenProse is a domain-specific language for orchestrating AI agent sessions.
-  Write .prose programs to define multi-agent workflows with a Python-like syntax.
-  Each `session "prompt"` statement spawns a subagent to complete a task.
+  OpenProse is a domain-specific language for orchestrating multi-step AI agent workflows.
+  Write .prose files to define sessions, variables, loops, parallel execution, and more.
+  The runtime handles execution — just run `open-prose run <file.prose>`.
 
-  Activate when: running .prose files, mentioning OpenProse, or orchestrating
-  multi-agent workflows from a script.
+  Activate when: the user mentions OpenProse, wants to run a .prose file,
+  or wants to automate a multi-step AI workflow.
 ---
 
 # OpenProse Skill
 
-OpenProse is a domain-specific language for orchestrating AI agent sessions. It provides a declarative, Python-like syntax for defining multi-agent workflows that execute via Claude Code's subagent system.
+OpenProse is a DSL for scripting AI agent workflows. You write a `.prose` file describing
+the steps; the `open-prose` CLI executes them, handling context passing, tool permissions,
+and output display.
 
-## Getting Started (For New Users)
-
-When a user asks "What is OpenProse?" or seems unfamiliar with it, provide this introduction:
-
-> **OpenProse** lets you script multi-step AI workflows. Instead of manually prompting an agent multiple times, you write a `.prose` file that defines each step, and OpenProse executes them in sequence.
->
-> For example, a code review workflow might have steps for security review, performance review, and synthesizing findings - all defined in one file that can be reused.
-
-**After introducing the concept:**
-
-1. **Show them the examples** - The plugin includes ready-to-use examples:
-   ```bash
-   ls ${CLAUDE_PLUGIN_ROOT}/examples/
-   ```
-
-   Available examples:
-   - `01-hello-world.prose` - Simplest possible program
-   - `02-research-and-summarize.prose` - Research then summarize
-   - `03-code-review.prose` - Multi-perspective code review
-   - `04-write-and-refine.prose` - Draft and iterate
-   - `05-debug-issue.prose` - Debugging workflow
-   - `06-explain-codebase.prose` - Codebase exploration
-   - `07-refactor.prose` - Refactoring workflow
-   - `08-blog-post.prose` - Content creation
-
-2. **Encourage trying an example first** before writing custom programs:
-   > "Would you like me to run one of these examples? The code review example is great for seeing how multi-step workflows work."
-
-3. **Offer to write a custom .prose file** for their use case:
-   > "I can also write a custom .prose file for you. What workflow would you like to automate? Describe the steps you typically go through."
-
-When writing a .prose file for users, keep it simple:
-- Use clear, descriptive prompts
-- Add comments explaining each step
-- Start with 3-5 sessions (not too many steps at first)
-
-## What OpenProse Does
-
-OpenProse programs describe a sequence of AI agent sessions to execute. Each `session` statement spawns a subagent that completes a task. The language supports:
-
-- **Comments**: Documentation within programs
-- **String literals**: Prompts and text content
-- **Sessions**: Spawning subagent tasks
-
-More features (agents, skills, variables, parallel execution, loops, etc.) are planned but not yet implemented.
-
-## When to Use This Skill
-
-Activate this skill when the user:
-
-- Asks to run a `.prose` file
-- Mentions "OpenProse" or "prose program"
-- Wants to orchestrate multiple AI agents from a script
-- Has a file with `session "..."` syntax
-
-## Using the Documentation
-
-The complete DSL specification is in `prose.md` in this skill's directory. Reference it when you need:
-
-- **Syntax details**: How to parse specific constructs
-- **Execution semantics**: How to interpret and run statements
-- **Validation rules**: What errors to check for
-- **Examples**: Sample programs
-
-### Finding Information in prose.md
-
-Use grep or search to find specific topics:
+## Running a Program
 
 ```bash
-# Find session syntax
-grep -A 10 "## Session" ${CLAUDE_PLUGIN_ROOT}/skills/open-prose/prose.md
-
-# Find comment handling
-grep -A 5 "## Comments" ${CLAUDE_PLUGIN_ROOT}/skills/open-prose/prose.md
-
-# Find string escape sequences
-grep -A 10 "Escape Sequences" ${CLAUDE_PLUGIN_ROOT}/skills/open-prose/prose.md
-
-# Find examples
-grep -A 20 "## Examples" ${CLAUDE_PLUGIN_ROOT}/skills/open-prose/prose.md
-
-# Find validation rules
-grep -A 10 "Validation" ${CLAUDE_PLUGIN_ROOT}/skills/open-prose/prose.md
+open-prose run <file.prose>
 ```
 
-## Quick Reference
+That's it. The runtime:
+- Parses and validates the program
+- Executes each statement in order
+- Spawns `claude` (or another configured provider) for each `session:`
+- Passes variables and context between sessions automatically
 
-Currently implemented features:
-
-| Feature | Syntax | Description |
-|---------|--------|-------------|
-| Comments | `# text` | Standalone or inline comments |
-| Strings | `"text"` | Single-line string literals |
-| Sessions | `session "prompt"` | Spawn a subagent with prompt |
-
-## Running OpenProse Programs
-
-### Step 1: Check if Compiler is Available
-
-Before executing a `.prose` file, check if the compiler works:
-
+Other commands:
 ```bash
-# Check if bun is available (preferred)
-which bun && bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts --help
-
-# If bun is not available, fall back to npx ts-node
-which bun || npx ts-node ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts --help
+open-prose validate <file.prose>   # check syntax without running
+open-prose compile <file.prose>    # show compiled form
+open-prose install-skills          # install skills into Claude Code globally
+open-prose help                    # show all commands
 ```
 
-### Step 2: Validate the Program
+## Language Quick Reference
 
-Always validate before execution:
-
-```bash
-# With bun (preferred)
-bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts validate <file.prose>
-
-# Or with ts-node fallback
-npx ts-node ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts validate <file.prose>
+### Agent definition
+```prose
+agent my_agent:
+  provider: "claude-code"   # claude-code | claude | opencode | aider | custom:bin
+  model: sonnet             # opus | sonnet | haiku
+  tools: ["bash", "read"]
+  prompt: "You are a helpful assistant."
 ```
 
-If validation fails, report the errors to the user with line numbers.
-
-### Step 3: Execute the Program
-
-If validation passes, execute each statement sequentially.
-
-For `session` statements, use Claude Code's **Task tool** to spawn a subagent:
-
-```
-Task({
-  description: "OpenProse session",
-  prompt: "<the session prompt>",
-  subagent_type: "general-purpose"
-})
+### Session — run the agent on a task
+```prose
+let result = session: my_agent
+  prompt: "Do something useful"
 ```
 
-Wait for each session to complete before proceeding to the next statement.
-
-## Execution Model
-
-When executing an OpenProse program:
-
-1. **Validate** - Run the compiler to check for syntax errors
-2. **Parse** - Identify statements (comments, sessions, etc.)
-3. **Execute** - Process each statement sequentially
-
-For simple programs with only comments and sessions, you can interpret directly by:
-- Skipping lines that start with `#` (comments)
-- Extracting the prompt from `session "..."` statements
-- Spawning subagents for each session
-
-## Compiler Commands
-
-The compiler supports these commands:
-
-```bash
-# Validate syntax only
-bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts validate <file.prose>
-
-# Compile and output canonical form
-bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts compile <file.prose>
-
-# Show help
-bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts --help
+### Variables
+```prose
+let x = "hello"
+const PI = 3.14
+x = "world"          # reassign let
 ```
 
-## Example Execution
+### String interpolation
+```prose
+let msg = "Hello {name}, today is {date}"
+```
 
-Given this program:
+### Ask — prompt user for input at runtime
+```prose
+ask folder_name: "What folder should I create?"
+```
+
+### Parallel execution
+```prose
+parallel:
+  let a = session: agent  prompt: "Task A"
+  let b = session: agent  prompt: "Task B"
+```
+
+### Repeat N times
+```prose
+repeat 3:
+  session: agent  prompt: "Do the thing again"
+```
+
+### For-each loop
+```prose
+foreach item in items:
+  let r = session: agent  prompt: "Process: {item}"
+```
+
+### Unbounded loop (AI decides when to stop)
+```prose
+loop until "the result looks good":
+  let draft = session: agent  prompt: "Improve the draft: {draft}"
+```
+
+### Conditional
+```prose
+if "result looks complete":
+  session: agent  prompt: "Summarize"
+elif "result needs more work":
+  session: agent  prompt: "Revise"
+else:
+  session: agent  prompt: "Start over"
+```
+
+### Choice — AI picks the best option
+```prose
+choice by "which approach is more thorough":
+  option "Deep dive":
+    session: agent  prompt: "Analyze in depth"
+  option "Quick scan":
+    session: agent  prompt: "Scan quickly"
+```
+
+### Error handling
+```prose
+try:
+  let r = session: agent  prompt: "Risky task"
+catch:
+  session: agent  prompt: "Handle the failure"
+```
+
+### Do block — named reusable block
+```prose
+do review:
+  let r = session: agent  prompt: "Review the code"
+```
+
+### Pipeline
+```prose
+let final = draft -> refine -> polish
+```
+
+### Import
+```prose
+import "other-workflow.prose"
+```
+
+## Context Passing Between Sessions
+
+Variables from previous sessions are injected into the next prompt via `{varname}`:
 
 ```prose
-# Research and summarize
-session "Research recent developments in quantum computing"
-session "Summarize the key findings in 3 bullet points"
+let facts = session: researcher
+  prompt: "Research the topic"
+
+let report = session: writer
+  prompt: "Write a report based on: {facts}"
 ```
 
-Execute by:
+The runtime automatically includes session outputs as context in subsequent sessions.
 
-1. Validate with `bun run ${CLAUDE_PLUGIN_ROOT}/bin/open-prose.ts validate program.prose`
-2. Skip the comment line
-3. Spawn a subagent with prompt "Research recent developments in quantum computing"
-4. Wait for completion
-5. Spawn a subagent with prompt "Summarize the key findings in 3 bullet points"
-6. Wait for completion
+## Writing Good .prose Programs
 
-For complete syntax and semantics, see `prose.md`.
+- **Be specific in prompts** — the agent only knows what you tell it
+- **Break complex tasks into steps** — each session should have one clear goal
+- **Use `let` to capture outputs** you'll need later
+- **Use `ask` for user-provided values** at runtime
+- **Start small** — 3-5 sessions before adding loops or parallel blocks
+
+## Examples
+
+The plugin includes ready-to-use examples:
+```bash
+ls ${CLAUDE_PLUGIN_ROOT}/examples/
+```
+
+To run an example:
+```bash
+open-prose run ${CLAUDE_PLUGIN_ROOT}/examples/test-claude-code-bash.prose
+```
+
+## Troubleshooting
+
+**"Unknown provider"** — check `provider:` value in your agent definition.
+Valid built-ins: `claude-code`, `claude`, `opencode`, `aider`. For others: `custom:mybinary --flag`.
+
+**Session fails / times out** — default timeout is 5 minutes. Add to `.open-prose.json`:
+```json
+{ "providers": { "claude-code": { "timeout": 600000 } } }
+```
+
+**Override provider config** — create `.open-prose.json` in your project:
+```json
+{
+  "providers": {
+    "claude-code": { "bin": "/usr/local/bin/claude" }
+  }
+}
+```
+
+For full language reference, see `prose.md` in this skill's directory.

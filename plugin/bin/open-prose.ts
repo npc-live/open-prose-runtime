@@ -9,8 +9,9 @@
  *   open-prose help                   - Show this help message
  */
 
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync } from 'fs';
+import { join, resolve } from 'path';
+import { homedir } from 'os';
 import { config as loadEnv } from 'dotenv';
 import { parse, compile, validate } from '../src';
 import { execute } from '../src/runtime';
@@ -30,17 +31,22 @@ function printUsage(): void {
   console.log(`OpenProse CLI v${VERSION}
 
 Usage:
-  open-prose compile <file.prose>   Compile and validate a program
-  open-prose validate <file.prose>  Validate syntax only
-  open-prose run <file.prose>       Execute a program
-  open-prose version                Show version number
-  open-prose help                   Show this help message
+  open-prose compile <file.prose>     Compile and validate a program
+  open-prose validate <file.prose>    Validate syntax only
+  open-prose run <file.prose>         Execute a program
+  open-prose install-skills           Install skills into Claude Code globally
+  open-prose version                  Show version number
+  open-prose help                     Show this help message
+
+Options for install-skills:
+  --force                             Overwrite existing skill files
+  --dry-run                           Preview what would be installed
 
 Examples:
-  open-prose compile program.prose
-  open-prose validate examples/research.prose
   open-prose run examples/hello-world.prose
-  open-prose --version
+  open-prose install-skills
+  open-prose install-skills --force
+  open-prose install-skills --dry-run
 `);
 }
 
@@ -272,6 +278,86 @@ async function runFile(filePath: string): Promise<void> {
   }
 }
 
+function installSkills(opts: { force: boolean; dryRun: boolean }): void {
+  const BOLD = '\x1b[1m'; const R = '\x1b[0m';
+  const GREEN = '\x1b[32m'; const YELLOW = '\x1b[33m'; const DIM = '\x1b[2m'; const CYAN = '\x1b[36m';
+
+  // Skills live next to this binary: <plugin>/skills/
+  const skillsRoot = resolve(__dirname, '..', 'skills');
+  if (!existsSync(skillsRoot)) {
+    console.error(`Skills directory not found: ${skillsRoot}`);
+    process.exit(1);
+  }
+
+  // Claude Code global commands directory
+  const commandsDir = join(homedir(), '.claude', 'commands');
+
+  const skillDirs = readdirSync(skillsRoot, { withFileTypes: true })
+    .filter(d => d.isDirectory())
+    .map(d => d.name);
+
+  if (skillDirs.length === 0) {
+    console.log('No skills found to install.');
+    return;
+  }
+
+  if (opts.dryRun) {
+    console.log(`${BOLD}${YELLOW}dry-run${R} — no files will be written\n`);
+  }
+
+  if (!opts.dryRun) {
+    mkdirSync(commandsDir, { recursive: true });
+  }
+
+  let installed = 0;
+  let skipped = 0;
+
+  for (const skillName of skillDirs) {
+    const skillDir = join(skillsRoot, skillName);
+    const dest = join(commandsDir, `${skillName}.md`);
+
+    // Collect all .md files in skill directory, SKILL.md first
+    const mdFiles = readdirSync(skillDir)
+      .filter(f => f.endsWith('.md'))
+      .sort((a, b) => (a === 'SKILL.md' ? -1 : b === 'SKILL.md' ? 1 : a.localeCompare(b)));
+
+    if (mdFiles.length === 0) {
+      console.log(`  ${DIM}skip${R}  ${skillName}  ${DIM}(no .md files)${R}`);
+      skipped++;
+      continue;
+    }
+
+    if (existsSync(dest) && !opts.force) {
+      console.log(`  ${YELLOW}skip${R}  ${skillName}  ${DIM}(already installed — use --force to overwrite)${R}`);
+      skipped++;
+      continue;
+    }
+
+    // Merge all .md files; replace ${CLAUDE_PLUGIN_ROOT} with actual path
+    const content = mdFiles
+      .map(f => readFileSync(join(skillDir, f), 'utf-8'))
+      .join('\n\n---\n\n')
+      .replace(/\$\{CLAUDE_PLUGIN_ROOT\}/g, resolve(__dirname, '..'));
+
+    if (opts.dryRun) {
+      console.log(`  ${CYAN}would install${R}  ${BOLD}${skillName}${R}  →  ${DIM}${dest}${R}  ${DIM}(${content.length} chars)${R}`);
+    } else {
+      writeFileSync(dest, content, 'utf-8');
+      console.log(`  ${GREEN}✓${R}  ${BOLD}${skillName}${R}  →  ${DIM}${dest}${R}`);
+    }
+    installed++;
+  }
+
+  console.log('');
+  if (opts.dryRun) {
+    console.log(`${DIM}Would install ${installed} skill(s), skip ${skipped}${R}`);
+  } else if (installed > 0) {
+    console.log(`${GREEN}${BOLD}✓ Installed ${installed} skill(s)${R}  ${DIM}Available as slash commands in Claude Code (e.g. /open-prose)${R}`);
+  } else {
+    console.log(`${YELLOW}Nothing installed.${R} ${DIM}All skills already exist. Use --force to overwrite.${R}`);
+  }
+}
+
 // Main
 const command = args[0];
 
@@ -303,6 +389,13 @@ switch (command) {
     runFile(args[1]).catch((error) => {
       console.error('Fatal error:', error);
       process.exit(1);
+    });
+    break;
+
+  case 'install-skills':
+    installSkills({
+      force: args.includes('--force'),
+      dryRun: args.includes('--dry-run'),
     });
     break;
 
